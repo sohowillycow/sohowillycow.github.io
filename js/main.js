@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Three.js Earth Initialization ---
     const earthContainer = document.getElementById('digital-earth-container');
-    let scene, camera, renderer, earthMesh;
+    let scene, camera, renderer, earthGroup; // Changed earthMesh to earthGroup
 
     function initThreeJSEarth() {
         if (!earthContainer || typeof THREE === 'undefined') {
@@ -93,68 +93,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Camera
         camera = new THREE.PerspectiveCamera(75, earthContainer.clientWidth / earthContainer.clientHeight, 0.1, 1000);
-        camera.position.z = 1.8; // Adjusted for a 0.8 radius sphere to be visible
+        camera.position.z = 1.8;
 
         // Renderer
         renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
         renderer.setSize(earthContainer.clientWidth, earthContainer.clientHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setClearAlpha(0.0); // Explicitly set clear alpha
 
-        while (earthContainer.firstChild) { // Clear previous CSS-only div if any
+        while (earthContainer.firstChild) {
             earthContainer.removeChild(earthContainer.firstChild);
         }
         earthContainer.appendChild(renderer.domElement);
 
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0xb0c0d0, 0.5); // Further reduced intensity
-        scene.add(ambientLight);
+        // No external lights, relying on material colors and blending
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8); // Further reduced intensity
-        directionalLight.position.set(4, 4, 6); // Position maintained
-        scene.add(directionalLight);
+        // Base Geometry for points and lines
+        const earthRadius = 0.85;
+        const icoDetail = 1; // Drastically reduced detail for fewer points
+        const baseGeometry = new THREE.IcosahedronGeometry(earthRadius, icoDetail);
 
-        const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.5); // Further reduced intensity
-        scene.add(hemisphereLight);
-
-
-        // Texture Loaders
-        const textureLoader = new THREE.TextureLoader();
-
-        // Error handling for texture loading
-        const onTextureError = function (xhr) {
-            console.error('An error occurred loading a texture:', xhr);
-        };
-
-        const dayMap = textureLoader.load(
-            'assets/images/8k_earth_daymap.jpg',
-            undefined, // onLoad callback (optional)
-            undefined, // onProgress callback (optional)
-            onTextureError // onError callback
-        );
-        const specularMap = textureLoader.load(
-            'assets/images/8k_earth_specular_map.png',
-            undefined,
-            undefined,
-            onTextureError
-        );
-
-        // Earth Material
-        const earthMaterial = new THREE.MeshStandardMaterial({
-            map: dayMap,
-            specularMap: specularMap,
-            roughness: 0.5, // Roughness maintained
-            metalness: 0.05, // Kept low for non-metallic earth
-            emissive: new THREE.Color(0x282828), // Emissive color maintained
-            emissiveIntensity: 0.1 // Further reduced emissive intensity
+        // Neon Blue Points
+        const pointsMaterial = new THREE.PointsMaterial({
+            color: 0x00B4D8, // Neon Blue
+            size: 0.03,      // Drastically reduced world unit size
+            sizeAttenuation: true, // Explicitly true
+            blending: THREE.NormalBlending,
+            transparent: true,
+            opacity: 0.7,    // Moderately transparent
+            depthWrite: false, // Important for transparent points
+            depthTest: false   // Disable depth testing for enhanced visual effect
         });
+        const earthPoints = new THREE.Points(baseGeometry, pointsMaterial);
 
-        // Earth Geometry
-        const earthGeometry = new THREE.SphereGeometry(0.85, 64, 64); // Radius maintained
+        // Darker Blue Connecting Lines
+        const edgesGeometry = new THREE.EdgesGeometry(baseGeometry);
+        const linesMaterial = new THREE.LineBasicMaterial({
+            color: 0x005073, // Darker Blue
+            transparent: true,
+            opacity: 0.5 // Slightly less opaque lines
+        });
+        const earthLines = new THREE.LineSegments(edgesGeometry, linesMaterial);
 
-        // Earth Mesh
-        earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
-        earthMesh.rotation.y = Math.PI; // Start with a different view
-        scene.add(earthMesh);
+        // Group for Earth elements
+        earthGroup = new THREE.Group();
+        earthGroup.add(earthPoints); // Re-enabled points rendering
+        earthGroup.add(earthLines);
+
+        earthGroup.rotation.y = Math.PI; // Start with a different view
+        scene.add(earthGroup);
 
         // Handle window resize
         window.addEventListener('resize', onWindowResize, false);
@@ -171,10 +158,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function animateEarth() {
-        if (earthMesh && renderer && scene && camera) {
+        if (earthGroup && renderer && scene && camera) { // Changed earthMesh to earthGroup
             requestAnimationFrame(animateEarth);
-            earthMesh.rotation.y += 0.0006; // Slower, more majestic rotation
-            // earthMesh.rotation.x += 0.00005; // Very subtle X wobble
+            earthGroup.rotation.y += 0.0006; // Slower, more majestic rotation
             renderer.render(scene, camera);
         }
     }
