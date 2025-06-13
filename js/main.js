@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Base Geometry for points and lines
         const earthRadius = 0.85;
-        const icoDetail = 1; // Drastically reduced detail for fewer points
+        const icoDetail = 2; // Drastically reduced detail for fewer points
         const baseGeometry = new THREE.IcosahedronGeometry(earthRadius, icoDetail);
 
         // Neon Blue Points
@@ -118,11 +118,11 @@ document.addEventListener('DOMContentLoaded', () => {
             color: 0x00B4D8, // Neon Blue
             size: 0.03,      // Drastically reduced world unit size
             sizeAttenuation: true, // Explicitly true
-            blending: THREE.NormalBlending,
+            blending: THREE.AdditiveBlending, // Change to AdditiveBlending for glow
             transparent: true,
-            opacity: 0.7,    // Moderately transparent
-            depthWrite: false, // Important for transparent points
-            depthTest: false   // Disable depth testing for enhanced visual effect
+            opacity: 0.3,   // Lower opacity for AdditiveBlending, adjust as needed
+            depthWrite: true, // Important for transparent points
+            depthTest: true   // Enable depth testing for correct occlusion
         });
         const earthPoints = new THREE.Points(baseGeometry, pointsMaterial);
 
