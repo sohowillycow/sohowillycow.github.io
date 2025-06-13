@@ -24,36 +24,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentPath = window.location.pathname.split('/').pop();
     const currentLang = document.documentElement.lang;
 
-    // Function to navigate to the other language version of the current page
     function switchToLanguage(targetLang) {
         let newPath;
         if (targetLang === 'zh-TW' || targetLang === 'zh') {
             if (currentPath.includes('-zh.html')) {
-                newPath = currentPath; // Already on Chinese page
+                newPath = currentPath;
             } else {
                 newPath = currentPath.replace('.html', '-zh.html');
                 if (currentPath === '' || currentPath === 'index.html') newPath = 'index-zh.html';
             }
-        } else { // Switching to English
+        } else {
             if (currentPath.includes('-zh.html')) {
                 newPath = currentPath.replace('-zh.html', '.html');
             } else {
-                newPath = currentPath; // Already on English page
-                if (newPath === 'index-zh.html') newPath = 'index.html'; // case for homepage from zh to en
+                newPath = currentPath;
+                if (newPath === 'index-zh.html') newPath = 'index.html';
             }
         }
-        // Ensure index.html for root
         if (newPath === '-zh.html') newPath = 'index-zh.html';
+        if (newPath === '.html' && (currentPath === '' || currentPath === 'index-zh.html')) newPath = 'index.html';
 
 
-        if (newPath !== currentPath) {
+        if (newPath !== currentPath && newPath !== '') {
             window.location.href = newPath;
         }
     }
 
-    // Set active language based on current page's lang attribute
     langSwitchLinks.forEach(link => {
-        if (link.getAttribute('data-lang') === currentLang.substring(0, 2)) { // 'en' or 'zh'
+        if (link.getAttribute('data-lang') === currentLang.substring(0, 2)) {
             link.classList.add('active-lang');
         } else {
             link.classList.remove('active-lang');
@@ -63,29 +61,126 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const selectedLang = link.getAttribute('data-lang');
             localStorage.setItem('preferredLang', selectedLang);
-
-            // Determine target language for switchToLanguage
             const targetLangForSwitch = (selectedLang === 'zh') ? 'zh-TW' : 'en';
             switchToLanguage(targetLangForSwitch);
         });
     });
 
-    // Redirect based on localStorage preference if not on the preferred language page
     const preferredLang = localStorage.getItem('preferredLang');
     if (preferredLang) {
-        const currentLangShort = currentLang.substring(0, 2); // 'en' or 'zh'
+        const currentLangShort = currentLang.substring(0, 2);
         if (preferredLang !== currentLangShort) {
-            // If on an English page but prefer Chinese
             if (preferredLang === 'zh' && !currentPath.includes('-zh.html')) {
                 switchToLanguage('zh-TW');
-            }
-            // If on a Chinese page but prefer English
-            else if (preferredLang === 'en' && currentPath.includes('-zh.html')) {
+            } else if (preferredLang === 'en' && currentPath.includes('-zh.html')) {
                 switchToLanguage('en');
             }
         }
     }
 
+    // --- Three.js Earth Initialization ---
+    const earthContainer = document.getElementById('digital-earth-container');
+    let scene, camera, renderer, earthMesh;
+
+    function initThreeJSEarth() {
+        if (!earthContainer || typeof THREE === 'undefined') {
+            console.warn("Three.js library or #digital-earth-container not found. Earth will not be rendered.");
+            return;
+        }
+
+        // Scene
+        scene = new THREE.Scene();
+
+        // Camera
+        camera = new THREE.PerspectiveCamera(75, earthContainer.clientWidth / earthContainer.clientHeight, 0.1, 1000);
+        camera.position.z = 1.8; // Adjusted for a 0.8 radius sphere to be visible
+
+        // Renderer
+        renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(earthContainer.clientWidth, earthContainer.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        while (earthContainer.firstChild) { // Clear previous CSS-only div if any
+            earthContainer.removeChild(earthContainer.firstChild);
+        }
+        earthContainer.appendChild(renderer.domElement);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xb0c0d0, 0.5); // Further reduced intensity
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8); // Further reduced intensity
+        directionalLight.position.set(4, 4, 6); // Position maintained
+        scene.add(directionalLight);
+
+        const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.5); // Further reduced intensity
+        scene.add(hemisphereLight);
+
+
+        // Texture Loaders
+        const textureLoader = new THREE.TextureLoader();
+
+        // Error handling for texture loading
+        const onTextureError = function (xhr) {
+            console.error('An error occurred loading a texture:', xhr);
+        };
+
+        const dayMap = textureLoader.load(
+            'assets/images/8k_earth_daymap.jpg',
+            undefined, // onLoad callback (optional)
+            undefined, // onProgress callback (optional)
+            onTextureError // onError callback
+        );
+        const specularMap = textureLoader.load(
+            'assets/images/8k_earth_specular_map.png',
+            undefined,
+            undefined,
+            onTextureError
+        );
+
+        // Earth Material
+        const earthMaterial = new THREE.MeshStandardMaterial({
+            map: dayMap,
+            specularMap: specularMap,
+            roughness: 0.5, // Roughness maintained
+            metalness: 0.05, // Kept low for non-metallic earth
+            emissive: new THREE.Color(0x282828), // Emissive color maintained
+            emissiveIntensity: 0.1 // Further reduced emissive intensity
+        });
+
+        // Earth Geometry
+        const earthGeometry = new THREE.SphereGeometry(0.85, 64, 64); // Radius maintained
+
+        // Earth Mesh
+        earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
+        earthMesh.rotation.y = Math.PI; // Start with a different view
+        scene.add(earthMesh);
+
+        // Handle window resize
+        window.addEventListener('resize', onWindowResize, false);
+
+        animateEarth();
+    }
+
+    function onWindowResize() {
+        if (camera && renderer && earthContainer && earthContainer.clientWidth > 0 && earthContainer.clientHeight > 0) {
+            camera.aspect = earthContainer.clientWidth / earthContainer.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(earthContainer.clientWidth, earthContainer.clientHeight);
+        }
+    }
+
+    function animateEarth() {
+        if (earthMesh && renderer && scene && camera) {
+            requestAnimationFrame(animateEarth);
+            earthMesh.rotation.y += 0.0006; // Slower, more majestic rotation
+            // earthMesh.rotation.x += 0.00005; // Very subtle X wobble
+            renderer.render(scene, camera);
+        }
+    }
+
+    // Call Three.js initialization
+    initThreeJSEarth();
 
     // --- tsparticles Initialization for Abstract Digital Grid & Pulses ---
     if (typeof tsParticles !== 'undefined' && document.getElementById('tsparticles')) {
@@ -95,26 +190,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 events: {
                     onHover: {
                         enable: true,
-                        mode: "bubble" // Pulse effect on hover
+                        mode: "bubble"
                     },
                     onClick: {
                         enable: true,
-                        mode: "push" // Push particles on click
+                        mode: "push"
                     },
                     resize: true
                 },
                 modes: {
                     bubble: {
                         distance: 150,
-                        size: 10, // Larger pulse size
+                        size: 10,
                         duration: 0.6,
                         opacity: 0.8,
-                        color: "#38F321" // Signal Green for pulse
+                        color: "#38F321"
                     },
                     push: {
                         quantity: 3
                     },
-                    repulse: { // Kept if needed for other interactions, but bubble is primary for hover
+                    repulse: {
                         distance: 100,
                         duration: 0.4
                     }
@@ -122,20 +217,20 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             particles: {
                 number: {
-                    value: 60, // Medium-low density
+                    value: 60,
                     density: {
                         enable: true,
                         value_area: 800
                     }
                 },
                 color: {
-                    value: ["#00B4D8", "#5E60CE"] // Neon Blue and Ultraviolet
+                    value: ["#00B4D8", "#5E60CE"]
                 },
                 shape: {
-                    type: "triangle", // Or "circle"
+                    type: "triangle",
                 },
                 opacity: {
-                    value: { min: 0.2, max: 0.7 }, // Energy-like transparency
+                    value: { min: 0.2, max: 0.7 },
                     random: true,
                     anim: {
                         enable: true,
@@ -145,9 +240,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 },
                 size: {
-                    value: { min: 1, max: 4 }, // Mostly small particles
+                    value: { min: 1, max: 4 },
                     random: true,
-                    anim: { // Subtle size animation for "breathing" effect
+                    anim: {
                         enable: true,
                         speed: 2,
                         size_min: 0.5,
@@ -157,22 +252,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 links: {
                     enable: true,
                     distance: 130,
-                    color: "rgba(0, 180, 216, 0.3)", // Neon Blue links, more transparent
+                    color: "rgba(0, 180, 216, 0.3)",
                     opacity: 0.3,
                     width: 1
                 },
                 move: {
                     enable: true,
-                    speed: 1.2, // Slow, steady movement
+                    speed: 1.2,
                     direction: "none",
                     random: true,
                     straight: false,
                     out_mode: "out",
-                    attract: { // Slight attraction for a more organic feel
+                    attract: {
                         enable: true,
                         rotateX: 600,
                         rotateY: 1200,
-                        strength: 0.1 // Very subtle attraction
+                        strength: 0.1
                     }
                 }
             },
@@ -197,11 +292,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (entry.isIntersecting) {
                 entry.target.style.opacity = '1';
                 entry.target.style.transform = 'translateY(0)';
-                // Optional: unobserve after animation
                 // observer.unobserve(entry.target);
             }
         });
-    }, { threshold: 0.1 }); // Trigger when 10% of the element is visible
+    }, { threshold: 0.1 });
 
     revealElements.forEach(el => {
         el.style.opacity = '0';
@@ -209,25 +303,5 @@ document.addEventListener('DOMContentLoaded', () => {
         el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
         revealObserver.observe(el);
     });
-
-    // --- Glitch Text Effect (Simple JS enhancement for timing/randomness if needed) ---
-    // The CSS animation is already quite good. JS could be used to:
-    // 1. Randomize animation timings or intensity.
-    // 2. Trigger glitch on hover or other events.
-    // For now, relying on CSS for simplicity as per "no build tools" and easy source view.
-    // If more complex JS-driven glitch is desired, it can be added here.
-
-    // --- Parallax Scroll (Basic example if needed, CSS might be preferred for simplicity) ---
-    // window.addEventListener('scroll', () => {
-    //     const scrolled = window.pageYOffset;
-    //     const heroContent = document.querySelector('#hero .hero-content .glitch'); // Example target
-    //     if (heroContent) {
-    //         // Adjust '0.5' for different parallax speeds
-    //         heroContent.style.transform = `translateY(${scrolled * 0.3}px)`;
-    //     }
-    // });
-    // Note: CSS transform for parallax can sometimes conflict with IntersectionObserver transforms.
-    // Careful implementation is needed if both are heavily used on same elements.
-    // The project plan focuses on CSS for parallax layers.
 
 });

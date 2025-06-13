@@ -83,6 +83,33 @@ body {
     }
 }
 
+/* --- Digital Earth Styling (Container for Three.js Canvas) --- */
+#digital-earth-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: -2;
+    /* Behind particles (-1) and grid (tsparticles::before, also effectively -1) */
+    pointer-events: none;
+    /* Ensure it doesn't interfere with mouse events for content */
+    overflow: hidden;
+    /* Ensure canvas doesn't cause scrollbars if slightly off */
+}
+
+#digital-earth {
+    /* This div will contain the Three.js canvas. */
+    width: 100%;
+    height: 100%;
+    /* background: transparent; */
+    /* Ensure no CSS bg interferes with Three.js render */
+}
+
+
 /* --- Typography --- */
 h1,
 h2,
