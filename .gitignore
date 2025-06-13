@@ -1,0 +1,28 @@
+# Operating System generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+PROJECT_PLAN.md
+
+# Editor/IDE specific files
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Log files (if any created locally)
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files (if any)
+tmp/
+temp/
+
+# Node modules (though not used in this project, good practice for future)
+node_modules/
+
+# Build output (though not used in this project)
+dist/
+build/
+out/

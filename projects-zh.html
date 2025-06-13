@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>專案 - 白帽駭客</title>
+    <meta name="description" content="一位白帽駭客的網路安全專案、CTF 題解與研究成果展示。">
+    <meta name="keywords" content="網路安全專案, CTF題解, 道德駭客研究, 滲透測試報告, 開源安全工具">
+
+    <!-- Favicon -->
+    <link rel="icon" href="assets/icons/favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;700&family=Noto+Sans+TC:wght@300;400;700&display=swap"
+        rel="stylesheet">
+
+    <!-- tsparticles CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+
+    <!-- Prism.js CDN -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"
+        defer></script>
+    <!-- Common languages to pre-load for faster highlighting, if known -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" defer></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" defer></script> -->
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body>
+    <div id="tsparticles"></div>
+
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="index-zh.html"><span>[</span>白帽<span>]</span></a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index-zh.html">首頁</a></li>
+                <li><a href="about-zh.html">關於我</a></li>
+                <li><a href="projects-zh.html" class="active">專案</a></li>
+                <li><a href="contact-zh.html">聯絡</a></li>
+            </ul>
+            <div class="lang-switch">
+                <a href="projects.html" class="lang-en" data-lang="en">🇬🇧 EN</a>
+                <span class="lang-separator">/</span>
+                <a href="projects-zh.html" class="lang-zh active-lang" data-lang="zh">🇨🇳 ZH</a>
+            </div>
+            <div class="hamburger">
+                <div class="line1"></div>
+                <div class="line2"></div>
+                <div class="line3"></div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="projects-hero" class="page-hero">
+            <div class="hero-content">
+                <h1 class="glitch" data-text="程式碼與密碼">程式碼與密碼</h1>
+                <p>我的網路安全探索成果展</p>
+            </div>
+        </section>
+
+        <section id="project-gallery" class="content-panel">
+            <h2>我的作品</h2>
+            <p class="section-intro">以下精選了我的專案、奪旗賽 (CTF) 題解以及相關研究。每個項目都反映了我對探索和保護數位領域的承諾。點擊任何專案以了解更多資訊（注意：這些是佔位內容）。</p>
+
+            <div class="project-filter">
+                <!-- Placeholder for filter buttons if needed in the future -->
+                <!-- <button class="filter-btn active" data-filter="all">全部</button>
+                <button class="filter-btn" data-filter="ctf">CTF 題解</button>
+                <button class="filter-btn" data-filter="tools">工具</button>
+                <button class="filter-btn" data-filter="research">研究</button> -->
+            </div>
+
+            <div class="project-grid">
+                <!-- Project Card 1: CTF Write-up -->
+                <div class="project-card" data-category="ctf">
+                    <img src="assets/images/project_placeholder_ctf.png" alt="CTF 挑戰佔位圖片">
+                    <div class="card-content">
+                        <h3>CTF 挑戰：「二進制漏洞利用大師」</h3>
+                        <p class="project-type">CTF 題解</p>
+                        <p>一個複雜二進制漏洞利用挑戰的詳細解析，涵蓋逆向工程、漏洞發現和漏洞利用開發。</p>
+                        <a href="#" class="project-link">閱讀題解 <span class="arrow">&rarr;</span></a>
+                        <div class="tags">
+                            <span>二進制漏洞利用</span>
+                            <span>逆向工程</span>
+                            <span>pwn</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project Card 2: Security Tool -->
+                <div class="project-card" data-category="tools">
+                    <img src="assets/images/project_placeholder_tool.png" alt="安全工具佔位圖片">
+                    <div class="card-content">
+                        <h3>開源專案：「威脅情報聚合器」</h3>
+                        <p class="project-type">安全工具</p>
+                        <p>一個基於 Python 的工具，可聚合來自各種來源的威脅情報，提供新興威脅的統一視圖。</p>
+                        <a href="#" class="project-link">在 GitHub 上查看 <span class="arrow">&rarr;</span></a>
+                        <div class="tags">
+                            <span>Python</span>
+                            <span>威脅情報</span>
+                            <span>開源</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project Card 3: Penetration Test Report (Conceptual) -->
+                <div class="project-card" data-category="research">
+                    <img src="assets/images/project_placeholder_pentest.png" alt="滲透測試佔位圖片">
+                    <div class="card-content">
+                        <h3>研究：「物聯網設備安全分析」</h3>
+                        <p class="project-type">滲透測試報告 (匿名化)</p>
+                        <p>對常見物聯網設備進行安全評估的結果概述，重點介紹普遍存在的漏洞和緩解策略。</p>
+                        <a href="#" class="project-link">閱讀摘要 <span class="arrow">&rarr;</span></a>
+                        <div class="tags">
+                            <span>物聯網安全</span>
+                            <span>漏洞研究</span>
+                            <span>韌體</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project Card 4: Web App Security Audit -->
+                <div class="project-card" data-category="ctf">
+                    <img src="assets/images/project_placeholder_webapp.png" alt="Web 應用程式安全佔位圖片">
+                    <div class="card-content">
+                        <h3>CTF 挑戰：「XSS 獵人專家」</h3>
+                        <p class="project-type">CTF 題解</p>
+                        <p>一個 Web 應用程式安全 CTF 的逐步解決方案，著重於跨網站指令碼 (XSS) 和內容安全策略 (CSP) 的繞過。</p>
+                        <a href="#" class="project-link">閱讀題解 <span class="arrow">&rarr;</span></a>
+                        <div class="tags">
+                            <span>Web 安全</span>
+                            <span>XSS</span>
+                            <span>CSP</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Example of a project with code snippet -->
+                <div class="project-card" data-category="tools">
+                    <img src="assets/images/project_placeholder_code.png" alt="程式碼片段佔位圖片">
+                    <div class="card-content">
+                        <h3>工具：「日誌匿名化腳本」</h3>
+                        <p class="project-type">實用腳本</p>
+                        <p>一個用於匿名化日誌檔案中敏感資料以便共享或分析的簡單腳本，使用 Python 編寫。</p>
+                        <pre><code class="language-python">
+# 簡易日誌匿名化工具
+import re
+
+def anonymize_ip(log_line):
+    ip_pattern = r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b"
+    return re.sub(ip_pattern, "已編輯_IP", log_line)
+
+# 使用範例:
+# anonymized_line = anonymize_ip("來自 192.168.1.1 的使用者存取了 /admin")
+# print(anonymized_line)
+                        </code></pre>
+                        <a href="#" class="project-link">查看片段 <span class="arrow">&rarr;</span></a>
+                        <div class="tags">
+                            <span>Python</span>
+                            <span>腳本</span>
+                            <span>資料隱私</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; <span id="current-year"></span> 您的駭客名稱. 保留一切權利.</p>
+        <p>堅守道德，守護未來。</p>
+        <div class="social-links">
+            <a href="#" aria-label="GitHub 個人檔案">GH</a>
+            <a href="#" aria-label="Twitter 個人檔案">TW</a>
+            <a href="#" aria-label="LinkedIn 個人檔案">LI</a>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+
+</html>

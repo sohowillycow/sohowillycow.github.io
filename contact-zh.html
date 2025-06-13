@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聯絡 - 白帽駭客</title>
+    <meta name="description" content="安全地聯絡這位白帽駭客。提供 GPG 加密資訊、社群媒體連結及道德準則。">
+    <meta name="keywords" content="聯絡白帽駭客, 安全通訊, GPG金鑰, 網路安全聯絡, 道德揭露">
+
+    <!-- Favicon -->
+    <link rel="icon" href="assets/icons/favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;700&family=Noto+Sans+TC:wght@300;400;700&display=swap"
+        rel="stylesheet">
+
+    <!-- tsparticles CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body>
+    <div id="tsparticles"></div>
+
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="index-zh.html"><span>[</span>白帽<span>]</span></a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index-zh.html">首頁</a></li>
+                <li><a href="about-zh.html">關於我</a></li>
+                <li><a href="projects-zh.html">專案</a></li>
+                <li><a href="contact-zh.html" class="active">聯絡</a></li>
+            </ul>
+            <div class="lang-switch">
+                <a href="contact.html" class="lang-en" data-lang="en">🇬🇧 EN</a>
+                <span class="lang-separator">/</span>
+                <a href="contact-zh.html" class="lang-zh active-lang" data-lang="zh">🇨🇳 ZH</a>
+            </div>
+            <div class="hamburger">
+                <div class="line1"></div>
+                <div class="line2"></div>
+                <div class="line3"></div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="contact-hero" class="page-hero">
+            <div class="hero-content">
+                <h1 class="glitch" data-text="安全通道">安全通道</h1>
+                <p>讓我們聯繫與合作</p>
+            </div>
+        </section>
+
+        <section id="contact-form-section" class="content-panel">
+            <h2>與我聯繫</h2>
+            <p class="section-intro">我隨時樂於討論新的專案、合作機會，或僅僅是聊聊網路安全。請使用以下方式與我聯繫。對於敏感資訊，我強烈建議使用 GPG 加密。</p>
+
+            <form id="contact-form" action="mailto:your-email@example.com?subject=來自網站的聯絡" method="post"
+                enctype="text/plain">
+                <div class="form-group">
+                    <label for="name">姓名：</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">電子郵件：</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="subject">主旨：</label>
+                    <input type="text" id="subject" name="subject" required>
+                </div>
+                <div class="form-group">
+                    <label for="message">訊息：</label>
+                    <textarea id="message" name="message" rows="6" required></textarea>
+                </div>
+                <button type="submit" class="cta-button">傳送訊息 (透過郵件客戶端)</button>
+            </form>
+            <p class="form-notice">注意：此表單使用 `mailto:` 連結，將會開啟您預設的電子郵件客戶端。本網站不會處理或儲存任何資料。</p>
+        </section>
+
+        <section id="gpg-info" class="content-panel">
+            <h2>GPG 加密</h2>
+            <p>為了安全通訊，請使用我的 GPG 金鑰加密您的訊息。這能確保只有我能閱讀您的訊息。</p>
+            <p>我的 GPG 金鑰 ID：`您的_GPG_金鑰_ID` (例如：0xABCDEF1234567890)</p>
+            <p>您可以從金鑰伺服器獲取我的公鑰，例如：</p>
+            <ul>
+                <li><a href="https://keys.openpgp.org/search?q=您的_GPG_金鑰_ID_或電子郵件" target="_blank"
+                        rel="noopener noreferrer">keys.openpgp.org</a></li>
+                <li><a href="https://pgp.mit.edu/pks/lookup?op=get&search=0x您的_GPG_金鑰_ID" target="_blank"
+                        rel="noopener noreferrer">pgp.mit.edu</a> (依金鑰 ID 搜尋)</li>
+            </ul>
+            <p>如果您不熟悉 GPG，可以參考 <a href="https://www.gnupg.org/getting-started/" target="_blank"
+                    rel="noopener noreferrer">GnuPG 入門指南</a>等資源。</p>
+        </section>
+
+        <section id="social-connect" class="content-panel">
+            <h2>在社群媒體上關注我</h2>
+            <p>您也可以在以下平台上找到我：</p>
+            <ul class="social-media-list">
+                <li><strong>GitHub:</strong> <a href="https://github.com/yourusername" target="_blank"
+                        rel="noopener noreferrer">github.com/yourusername</a></li>
+                <li><strong>X (Twitter):</strong> <a href="https://twitter.com/yourusername" target="_blank"
+                        rel="noopener noreferrer">@yourusername</a></li>
+                <!-- Add other platforms like LinkedIn if applicable -->
+                <!-- <li><strong>LinkedIn:</strong> <a href="https://linkedin.com/in/yourusername" target="_blank" rel="noopener noreferrer">linkedin.com/in/yourusername</a></li> -->
+            </ul>
+        </section>
+    </main>
+
+    <footer class="contact-footer">
+        <div class="legal-disclaimer">
+            <h3>法律與道德聲明</h3>
+            <p>本網站上分享的所有活動和資訊僅供教育和道德目的使用。我恪守嚴格的白帽行為準則。所討論的任何工具或技術皆旨在用於授權的安全測試和研究。未經授權存取或修改電腦系統是非法且不道德的。對於此處提供的任何資訊的濫用，我概不負責。
+            </p>
+            <p>如果您認為在本網站或我的任何專案中發現安全漏洞，請透過上述聯絡方式負責任地報告，對於敏感細節，建議使用 GPG 加密。</p>
+        </div>
+        <p>&copy; <span id="current-year"></span> 您的駭客名稱. 保留一切權利.</p>
+        <p>堅守道德，守護未來。</p>
+        <div class="social-links">
+            <a href="https://github.com/yourusername" aria-label="GitHub 個人檔案" target="_blank"
+                rel="noopener noreferrer">GH</a>
+            <a href="https://twitter.com/yourusername" aria-label="Twitter 個人檔案" target="_blank"
+                rel="noopener noreferrer">TW</a>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+
+</html>

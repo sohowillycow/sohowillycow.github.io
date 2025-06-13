@@ -1,41 +1,149 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>About - White Hat Hacker</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css">
+  <title>About Me - White Hat Hacker</title>
+  <meta name="description"
+    content="Learn more about the white-hat hacker, their mission, skills, and philosophy in cybersecurity.">
+  <meta name="keywords" content="about white hat hacker, cybersecurity mission, ethical hacking philosophy, skills">
+
+  <!-- Favicon -->
+  <link rel="icon" href="assets/icons/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;700&family=Noto+Sans+TC:wght@300;400;700&display=swap"
+    rel="stylesheet">
+
+  <!-- tsparticles CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="css/main.css">
 </head>
+
 <body>
-  <!-- 導覽列 -->
-  <nav class="nav">
-    <div class="nav__logo">WHH</div>
-    <ul class="nav__list">
-      <li><a class="nav__link" href="index.html">Home</a></li>
-      <li><a class="nav__link" href="about.html">About</a></li>
-      <li><a class="nav__link" href="projects.html">Projects</a></li>
-      <li><a class="nav__link" href="toolkit.html">Toolkit</a></li>
-      <li><a class="nav__link" href="contact.html">Contact</a></li>
-    </ul>
-  </nav>
+  <div id="tsparticles"></div>
 
-  <!-- 內容 -->
-  <main class="section container">
-    <h1>關於我 / About Me</h1>
-    <p>這裡放自我介紹與白帽駭客經歷。</p>
+  <header>
+    <nav>
+      <div class="logo">
+        <a href="index.html"><span>[</span>WHH<span>]</span></a>
+      </div>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html" class="active">About</a></li>
+        <li><a href="projects.html">Projects</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+      <div class="lang-switch">
+        <a href="about.html" class="lang-en active-lang" data-lang="en">🇬🇧 EN</a>
+        <span class="lang-separator">/</span>
+        <a href="about-zh.html" class="lang-zh" data-lang="zh">🇨🇳 ZH</a>
+      </div>
+      <div class="hamburger">
+        <div class="line1"></div>
+        <div class="line2"></div>
+        <div class="line3"></div>
+      </div>
+    </nav>
+  </header>
 
-    <h2>專業證照時間軸 / Certifications</h2>
-    <ul>
-      <li>2020 - OSCP</li>
-      <li>2021 - CEH</li>
-      <li>2022 - CISSP</li>
-    </ul>
+  <main>
+    <section id="about-hero" class="page-hero">
+      <div class="hero-content">
+        <h1 class="glitch" data-text="THE ETHICAL CODE">THE ETHICAL CODE</h1>
+        <p>My Journey & Philosophy in Cybersecurity</p>
+      </div>
+    </section>
+
+    <section id="profile" class="content-panel">
+      <h2>Who I Am</h2>
+      <div class="profile-grid">
+        <div class="profile-image">
+          <!-- Placeholder for a profile picture or an abstract hacker-themed image -->
+          <img src="assets/images/profile_placeholder.png" alt="Profile Picture Placeholder">
+        </div>
+        <div class="profile-text">
+          <p>I am a dedicated cybersecurity professional with a profound passion for understanding and mitigating
+            digital threats. My journey into the world of ethical hacking began with a curiosity for how systems work
+            and a drive to use that knowledge for good. I believe in the power of proactive security and the importance
+            of a community-driven approach to tackling cyber challenges.</p>
+          <p>With [X] years of experience in the field, I've honed my skills in various domains, including penetration
+            testing, vulnerability assessment, secure code review, and incident response. My approach is always
+            analytical, meticulous, and guided by a strong ethical compass.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="mission" class="content-panel">
+      <h2>My Mission</h2>
+      <p>My core mission is to contribute to a safer and more secure digital environment for everyone. I strive to:</p>
+      <ul>
+        <li><strong>Identify and Remediate Vulnerabilities:</strong> Proactively uncover weaknesses in systems and
+          applications before malicious actors can exploit them.</li>
+        <li><strong>Promote Security Awareness:</strong> Share knowledge and best practices to empower individuals and
+          organizations to protect themselves.</li>
+        <li><strong>Develop Innovative Solutions:</strong> Create and contribute to tools and methodologies that advance
+          the state of cybersecurity.</li>
+        <li><strong>Foster Collaboration:</strong> Work with the cybersecurity community to share insights and
+          collectively address emerging threats.</li>
+      </ul>
+      <p>I am committed to continuous learning and staying ahead of the curve in this rapidly evolving field. The
+        digital world presents constant challenges, and I am dedicated to meeting them with integrity and expertise.</p>
+    </section>
+
+    <section id="skills" class="content-panel">
+      <h2>Core Competencies</h2>
+      <div class="skills-grid">
+        <div class="skill-card">
+          <h3>Penetration Testing</h3>
+          <p>Simulating real-world attacks to identify exploitable vulnerabilities in networks, web applications, and
+            systems.</p>
+        </div>
+        <div class="skill-card">
+          <h3>Vulnerability Assessment</h3>
+          <p>Systematic review of security weaknesses in an information system. Evaluating if the system is susceptible
+            to any known vulnerabilities.</p>
+        </div>
+        <div class="skill-card">
+          <h3>Secure Development</h3>
+          <p>Advising on and implementing secure coding practices and DevSecOps principles to build resilient
+            applications.</p>
+        </div>
+        <div class="skill-card">
+          <h3>Threat Intelligence</h3>
+          <p>Analyzing threat actor TTPs (Tactics, Techniques, and Procedures) to anticipate and defend against attacks.
+          </p>
+        </div>
+        <div class="skill-card">
+          <h3>Incident Response</h3>
+          <p>Developing and executing plans to address and manage the aftermath of a security breach or cyberattack.</p>
+        </div>
+        <div class="skill-card">
+          <h3>Cryptography</h3>
+          <p>Understanding and applying cryptographic principles to secure data in transit and at rest.</p>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <footer class="footer">
-    <p>&copy; 2024 White Hat Hacker</p>
+  <footer>
+    <p>&copy; <span id="current-year"></span> Your Hacker Name. All Rights Reserved.</p>
+    <p>Stay Ethical. Secure the Future.</p>
+    <div class="social-links">
+      <a href="#" aria-label="GitHub Profile">GH</a>
+      <a href="#" aria-label="Twitter Profile">TW</a>
+      <a href="#" aria-label="LinkedIn Profile">LI</a>
+    </div>
   </footer>
-  <script type="module" src="assets/js/main.js"></script>
+
+  <script src="js/main.js"></script>
 </body>
+
 </html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>白帽駭客 - 作品集</title>
+    <meta name="description" content="一位白帽駭客的個人網站，展示專案、技能及網路安全見解。">
+    <meta name="keywords" content="白帽駭客, 網路安全, 道德駭客, 滲透測試, 作品集">
+
+    <!-- Favicon (placeholder - will need actual favicons later) -->
+    <link rel="icon" href="assets/icons/favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;700&family=Noto+Sans+TC:wght@300;400;700&display=swap"
+        rel="stylesheet">
+
+    <!-- tsparticles CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+
+    <!-- Prism.js CDN (for project pages, but can be included globally) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" defer></script>
+    <!-- Add languages for Prism if known, e.g. prism-python.min.js -->
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body>
+    <!-- Particle background container -->
+    <div id="tsparticles"></div>
+
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="index-zh.html"><span>[</span>白帽<span>]</span></a> <!-- 可更改為中文縮寫 -->
+            </div>
+            <ul class="nav-links">
+                <li><a href="index-zh.html" class="active">首頁</a></li>
+                <li><a href="about-zh.html">關於我</a></li>
+                <li><a href="projects-zh.html">專案</a></li>
+                <li><a href="contact-zh.html">聯絡</a></li>
+            </ul>
+            <div class="lang-switch">
+                <a href="index.html" class="lang-en" data-lang="en">🇬🇧 EN</a>
+                <span class="lang-separator">/</span>
+                <a href="index-zh.html" class="lang-zh active-lang" data-lang="zh">🇨🇳 ZH</a>
+            </div>
+            <div class="hamburger">
+                <div class="line1"></div>
+                <div class="line2"></div>
+                <div class="line3"></div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="hero">
+            <div class="hero-content">
+                <h1 class="glitch" data-text="守護數位疆域">守護數位疆域</h1>
+                <p>道德駭客 | 網路安全專家 | 創新者</p>
+                <a href="projects-zh.html" class="cta-button">瀏覽我的專案</a>
+            </div>
+        </section>
+
+        <section id="intro-summary" class="content-panel">
+            <h2>歡迎來到我的網路空間</h2>
+            <p>我是一位充滿熱情的白帽駭客，致力於探索數位安全的前沿。我的使命是識別漏洞、開發強大的防禦措施，並分享知識以創造一個更安全的網路世界。這裡展示了我的歷程、專案以及對不斷發展的網路安全領域的見解。</p>
+            <p>在這裡，您將找到我的作品集，從奪旗賽 (CTF) 的題解和滲透測試報告，到我開發的開源安全工具。歡迎深入探索，讓我們攜手合作，共同打造一個更安全的數位領域。</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; <span id="current-year"></span> 您的駭客名稱. 保留一切權利.</p>
+        <p>堅守道德，守護未來。</p>
+        <div class="social-links">
+            <!-- Placeholder for social media icons/links -->
+            <a href="#" aria-label="GitHub 個人檔案">GH</a>
+            <a href="#" aria-label="Twitter 個人檔案">TW</a>
+            <a href="#" aria-label="LinkedIn 個人檔案">LI</a>
+        </div>
+    </footer>
+
+    <!-- Main JS -->
+    <script src="js/main.js"></script>
+</body>
+
+</html>

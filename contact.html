@@ -1,44 +1,149 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contact - White Hat Hacker</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css">
-</head>
-<body>
-  <nav class="nav">
-    <div class="nav__logo">WHH</div>
-    <ul class="nav__list">
-      <li><a class="nav__link" href="index.html">Home</a></li>
-      <li><a class="nav__link" href="about.html">About</a></li>
-      <li><a class="nav__link" href="projects.html">Projects</a></li>
-      <li><a class="nav__link" href="toolkit.html">Toolkit</a></li>
-      <li><a class="nav__link" href="contact.html">Contact</a></li>
-    </ul>
-  </nav>
+  <meta name="description"
+    content="Securely contact the white-hat hacker. Information on GPG encryption, social media, and ethical guidelines.">
+  <meta name="keywords"
+    content="contact white hat hacker, secure communication, GPG key, cybersecurity contact, ethical disclosure">
 
-  <main class="section container">
-    <h1>聯絡我 / Contact</h1>
-    <p>Email: <a href="mailto:whh@example.com">whh@example.com</a></p>
-    <p>PGP Fingerprint: <span id="pgp">ABCD EFGH IJKL MNOP</span>
-      <button id="copy-btn">Copy</button>
-    </p>
-    <p><a href="mailto:whh@example.com">Now hiring!</a></p>
+  <!-- Favicon -->
+  <link rel="icon" href="assets/icons/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;700&family=Noto+Sans+TC:wght@300;400;700&display=swap"
+    rel="stylesheet">
+
+  <!-- tsparticles CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body>
+  <div id="tsparticles"></div>
+
+  <header>
+    <nav>
+      <div class="logo">
+        <a href="index.html"><span>[</span>WHH<span>]</span></a>
+      </div>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="projects.html">Projects</a></li>
+        <li><a href="contact.html" class="active">Contact</a></li>
+      </ul>
+      <div class="lang-switch">
+        <a href="contact.html" class="lang-en active-lang" data-lang="en">🇬🇧 EN</a>
+        <span class="lang-separator">/</span>
+        <a href="contact-zh.html" class="lang-zh" data-lang="zh">🇨🇳 ZH</a>
+      </div>
+      <div class="hamburger">
+        <div class="line1"></div>
+        <div class="line2"></div>
+        <div class="line3"></div>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section id="contact-hero" class="page-hero">
+      <div class="hero-content">
+        <h1 class="glitch" data-text="SECURE CHANNEL">SECURE CHANNEL</h1>
+        <p>Let's Connect & Collaborate</p>
+      </div>
+    </section>
+
+    <section id="contact-form-section" class="content-panel">
+      <h2>Get In Touch</h2>
+      <p class="section-intro">I'm always open to discussing new projects, collaborations, or just chatting about
+        cybersecurity. Please use the methods below to reach out. For sensitive information, I strongly recommend using
+        GPG encryption.</p>
+
+      <form id="contact-form" action="mailto:your-email@example.com?subject=Contact from Website" method="post"
+        enctype="text/plain">
+        <div class="form-group">
+          <label for="name">Name:</label>
+          <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+          <label for="subject">Subject:</label>
+          <input type="text" id="subject" name="subject" required>
+        </div>
+        <div class="form-group">
+          <label for="message">Message:</label>
+          <textarea id="message" name="message" rows="6" required></textarea>
+        </div>
+        <button type="submit" class="cta-button">Send Message (via Email Client)</button>
+      </form>
+      <p class="form-notice">Note: This form uses a `mailto:` link and will open your default email client. No data is
+        processed or stored by this website.</p>
+    </section>
+
+    <section id="gpg-info" class="content-panel">
+      <h2>GPG Encryption</h2>
+      <p>For secure communication, please encrypt your message using my GPG key. This ensures that only I can read your
+        message.</p>
+      <p>My GPG Key ID: `YOUR_GPG_KEY_ID` (e.g., 0xABCDEF1234567890)</p>
+      <p>You can fetch my public key from a keyserver like:</p>
+      <ul>
+        <li><a href="https://keys.openpgp.org/search?q=YOUR_GPG_KEY_ID_OR_EMAIL" target="_blank"
+            rel="noopener noreferrer">keys.openpgp.org</a></li>
+        <li><a href="https://pgp.mit.edu/pks/lookup?op=get&search=0xYOUR_GPG_KEY_ID" target="_blank"
+            rel="noopener noreferrer">pgp.mit.edu</a> (Search by Key ID)</li>
+      </ul>
+      <p>If you're new to GPG, resources like <a href="https://www.gnupg.org/getting-started/" target="_blank"
+          rel="noopener noreferrer">GnuPG's Getting Started Guide</a> can help.</p>
+    </section>
+
+    <section id="social-connect" class="content-panel">
+      <h2>Connect on Social Media</h2>
+      <p>You can also find me on the following platforms:</p>
+      <ul class="social-media-list">
+        <li><strong>GitHub:</strong> <a href="https://github.com/yourusername" target="_blank"
+            rel="noopener noreferrer">github.com/yourusername</a></li>
+        <li><strong>X (Twitter):</strong> <a href="https://twitter.com/yourusername" target="_blank"
+            rel="noopener noreferrer">@yourusername</a></li>
+        <!-- Add other platforms like LinkedIn if applicable -->
+        <!-- <li><strong>LinkedIn:</strong> <a href="https://linkedin.com/in/yourusername" target="_blank" rel="noopener noreferrer">linkedin.com/in/yourusername</a></li> -->
+      </ul>
+    </section>
   </main>
 
-  <footer class="footer">
-    <p>&copy; 2024 White Hat Hacker</p>
+  <footer class="contact-footer">
+    <div class="legal-disclaimer">
+      <h3>Legal & Ethical Disclaimer</h3>
+      <p>All activities and information shared on this website are for educational and ethical purposes only. I operate
+        under a strict white-hat code of conduct. Any tools or techniques discussed are intended for use in authorized
+        security testing and research. Unauthorized access to or modification of computer systems is illegal and
+        unethical. I am not responsible for the misuse of any information provided herein.</p>
+      <p>If you believe you have found a security vulnerability on this website or any of my projects, please report it
+        responsibly via the contact methods above, preferably using GPG encryption for sensitive details.</p>
+    </div>
+    <p>&copy; <span id="current-year"></span> Your Hacker Name. All Rights Reserved.</p>
+    <p>Stay Ethical. Secure the Future.</p>
+    <div class="social-links">
+      <a href="https://github.com/yourusername" aria-label="GitHub Profile" target="_blank"
+        rel="noopener noreferrer">GH</a>
+      <a href="https://twitter.com/yourusername" aria-label="Twitter Profile" target="_blank"
+        rel="noopener noreferrer">TW</a>
+    </div>
   </footer>
-  <script type="module" src="assets/js/main.js"></script>
-  <script type="module">
-    // 複製 PGP 指紋 | Copy PGP fingerprint
-    'use strict';
-    document.getElementById('copy-btn').addEventListener('click', () => {
-      const text = document.getElementById('pgp').textContent;
-      navigator.clipboard.writeText(text);
-    });
-  </script>
+
+  <script src="js/main.js"></script>
 </body>
+
 </html>
