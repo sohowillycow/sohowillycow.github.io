@@ -106,38 +106,50 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         earthContainer.appendChild(renderer.domElement);
 
-        // No external lights, relying on material colors and blending
+        // Add Lights
+        scene.add(new THREE.AmbientLight(0x404040, 1.2));
+        const pointLight = new THREE.PointLight(0x99ccff, 1, 5);
+        pointLight.position.set(2, 2, 2);
+        scene.add(pointLight);
 
         // Base Geometry for points and lines
         const earthRadius = 0.85;
-        const icoDetail = 2; // Drastically reduced detail for fewer points
+        const icoDetail = 3; // Drastically reduced detail for fewer points
         const baseGeometry = new THREE.IcosahedronGeometry(earthRadius, icoDetail);
 
-        // Neon Blue Points
-        const pointsMaterial = new THREE.PointsMaterial({
-            color: 0x00B4D8, // Neon Blue
-            size: 0.03,      // Drastically reduced world unit size
-            sizeAttenuation: true, // Explicitly true
-            blending: THREE.AdditiveBlending, // Change to AdditiveBlending for glow
-            transparent: true,
-            opacity: 0.3,   // Lower opacity for AdditiveBlending, adjust as needed
-            depthWrite: true, // Important for transparent points
-            depthTest: true   // Enable depth testing for correct occlusion
+        // InstancedMesh for sphere nodes
+        const sphereGeo = new THREE.SphereGeometry(0.0035, 12, 12); // Smaller and smoother sphere
+        const sphereMaterial = new THREE.MeshStandardMaterial({
+            color: 0x00B4D8,    // Neon Blue
+            emissive: 0x0066ff,   // Slight glow
+            roughness: 0.3,
+            metalness: 0.1
         });
-        const earthPoints = new THREE.Points(baseGeometry, pointsMaterial);
+        const instanceCount = baseGeometry.attributes.position.count;
+        const instancedSpheres = new THREE.InstancedMesh(sphereGeo, sphereMaterial, instanceCount);
+
+        const dummy = new THREE.Object3D();
+        for (let i = 0; i < instanceCount; i++) {
+            dummy.position.fromBufferAttribute(baseGeometry.attributes.position, i);
+            dummy.updateMatrix();
+            instancedSpheres.setMatrixAt(i, dummy.matrix);
+        }
 
         // Darker Blue Connecting Lines
         const edgesGeometry = new THREE.EdgesGeometry(baseGeometry);
         const linesMaterial = new THREE.LineBasicMaterial({
             color: 0x005073, // Darker Blue
             transparent: true,
-            opacity: 0.5 // Slightly less opaque lines
+            opacity: 0.5, // Slightly less opaque lines
+            polygonOffset: true,
+            polygonOffsetFactor: 1,
+            polygonOffsetUnits: 1
         });
         const earthLines = new THREE.LineSegments(edgesGeometry, linesMaterial);
 
         // Group for Earth elements
         earthGroup = new THREE.Group();
-        earthGroup.add(earthPoints); // Re-enabled points rendering
+        earthGroup.add(instancedSpheres);
         earthGroup.add(earthLines);
 
         earthGroup.rotation.y = Math.PI; // Start with a different view
