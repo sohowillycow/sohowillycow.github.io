@@ -1,4 +1,5 @@
 (function () {
+// BufferGeometryUtils placeholder - based on r128, updated to r161
 
 	class BufferGeometryUtils {
 
