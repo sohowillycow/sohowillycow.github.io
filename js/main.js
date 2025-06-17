@@ -470,20 +470,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         /* earth nodes & edges */
         let rawBaseGeo = new THREE.IcosahedronGeometry(earthRadius, 3);
-        console.log("--- Diagnosing rawBaseGeo ---");
-        console.log("rawBaseGeo object:", rawBaseGeo);
-        console.log("rawBaseGeo.index:", rawBaseGeo.index);
+        // console.log("--- Diagnosing rawBaseGeo ---");
+        // console.log("rawBaseGeo object:", rawBaseGeo);
+        // console.log("rawBaseGeo.index:", rawBaseGeo.index);
 
         let baseGeoToUse; // This will be the geometry used for graph and visuals
 
         if (THREE.BufferGeometryUtils && typeof THREE.BufferGeometryUtils.mergeVertices === 'function') {
-            console.log("Attempting to use THREE.BufferGeometryUtils.mergeVertices()");
+            // console.log("Attempting to use THREE.BufferGeometryUtils.mergeVertices()");
             try {
                 // Create a clone to avoid modifying the original rawBaseGeo if mergeVertices works in-place on some versions
                 const geoToMerge = rawBaseGeo.clone();
                 baseGeoToUse = THREE.BufferGeometryUtils.mergeVertices(geoToMerge, 1e-5);
-                console.log("baseGeo after mergeVertices:", baseGeoToUse);
-                console.log("baseGeo.index after mergeVertices:", baseGeoToUse.index);
+                // console.log("baseGeo after mergeVertices:", baseGeoToUse);
+                // console.log("baseGeo.index after mergeVertices:", baseGeoToUse.index);
                 if (!baseGeoToUse.index) {
                     console.warn("mergeVertices did not produce an indexed geometry. Falling back.");
                     baseGeoToUse = rawBaseGeo; // Fallback if mergeVertices didn't help
@@ -498,15 +498,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Final check on the baseGeo to be used
-        console.log("--- Diagnosing final baseGeo to be used ---");
-        console.log("Final baseGeo object:", baseGeoToUse);
-        console.log("Final baseGeo.index:", baseGeoToUse.index);
+        // console.log("--- Diagnosing final baseGeo to be used ---");
+        // console.log("Final baseGeo object:", baseGeoToUse);
+        // console.log("Final baseGeo.index:", baseGeoToUse.index);
         if (baseGeoToUse.index) {
-            console.log("Final baseGeo.index.array (first 12):", baseGeoToUse.index.array.slice(0, 12));
+            // console.log("Final baseGeo.index.array (first 12):", baseGeoToUse.index.array.slice(0, 12));
         } else {
-            console.log("Final baseGeo.index is still null or undefined.");
+            // console.log("Final baseGeo.index is still null or undefined.");
         }
-        console.log("--- End Diagnosing final baseGeo ---");
+        // console.log("--- End Diagnosing final baseGeo ---");
 
         adjacency = buildGraph(baseGeoToUse); // ★ Build graph here using the processed geometry
 
