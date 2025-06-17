@@ -615,6 +615,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const yearSpan = document.getElementById('current-year');
     if (yearSpan) yearSpan.textContent = new Date().getFullYear();
 
+    /* ------------------------------------------------------------------
+       🎛️  Toolkit effects (matrix, typewriter, cards, cursor)
+       ------------------------------------------------------------------ */
+    const heroCanvas = document.querySelector('.hero__canvas');
+    if (heroCanvas) startMatrix(heroCanvas);
+
+    const heroTitle = document.querySelector('.hero__title');
+    if (heroTitle) typewriter(heroTitle, '$ whoami — white-hat.hacker');
+
+    setupCursor();
+    setupCards();
+
     /* reveal animations */
     const revealEls = document.querySelectorAll('.content-panel, .project-card, .skill-card');
     const io = new IntersectionObserver((entries) => { entries.forEach(e => { if (e.isIntersecting) { e.target.style.opacity = '1'; e.target.style.transform = 'translateY(0)'; } }); }, { threshold: 0.1 });
@@ -623,3 +635,69 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ========= /main.js ========= */
+
+function startMatrix(canvas) {
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width = window.innerWidth;
+    const height = canvas.height = window.innerHeight;
+    const columns = Math.floor(width / 20);
+    const drops = Array(columns).fill(0);
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+
+    function draw() {
+        ctx.fillStyle = 'rgba(5,5,5,0.05)';
+        ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = '#00FF9F';
+        ctx.font = '16px "IBM Plex Mono"';
+
+        drops.forEach((y, i) => {
+            const text = chars.charAt(Math.floor(Math.random() * chars.length));
+            ctx.fillText(text, i * 20, y);
+            if (y > height && Math.random() > 0.975) {
+                drops[i] = 0;
+            } else {
+                drops[i] = y + 20;
+            }
+        });
+
+        requestAnimationFrame(draw);
+    }
+
+    draw();
+}
+
+function typewriter(element, text, speed = 100) {
+    let index = 0;
+    function type() {
+        if (index < text.length) {
+            element.textContent += text.charAt(index);
+            index += 1;
+            setTimeout(type, speed);
+        }
+    }
+    type();
+}
+
+function setupCursor() {
+    const cursor = document.createElement('div');
+    cursor.className = 'cursor';
+    document.body.appendChild(cursor);
+    document.addEventListener('mousemove', (e) => {
+        cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+    });
+}
+
+function setupCards() {
+    const cards = document.querySelectorAll('.card');
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('card--show');
+            }
+        });
+    }, { threshold: 0.1 });
+    cards.forEach(card => {
+        card.classList.add('card--flip');
+        observer.observe(card);
+    });
+}
