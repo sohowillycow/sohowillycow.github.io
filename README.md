@@ -8,8 +8,8 @@ This project is a personal portfolio website for a white-hat hacker. It showcase
 - HTML5
 - CSS3
 - JavaScript (ES6+)
-- Three.js (r128)
-- BufferGeometryUtils.js (from Three.js r128 examples)
+- Three.js (r161)
+- BufferGeometryUtils.js (from Three.js r161 examples)
 - tsparticles.js
 
 ## 2. File Structure & Purpose
@@ -17,7 +17,7 @@ This project is a personal portfolio website for a white-hat hacker. It showcase
 - **`index.html` (and `*-zh.html` variants)**: Main HTML entry point and structure for all pages.
 - **`css/main.css`**: Primary stylesheet defining the visual appearance, layout, and responsiveness.
 - **`js/main.js`**: Core JavaScript file handling all dynamic behavior, UI interactions, and the Three.js 3D visualization.
-- **`js/three-utils/BufferGeometryUtils.js`**: Utility functions for Three.js, specifically used for `mergeVertices`.
+- **BufferGeometryUtils.js (loaded via CDN)**: Utility functions for Three.js, specifically used for `mergeVertices`.
 - **`assets/`**: Contains static assets like images, icons. (Note: `js/main.js` is also found in `assets/js/main.js` in the provided file list, which might indicate a duplicate or an old path. The primary active script seems to be `js/main.js` based on `index.html`.)
 
 ## 3. HTML Structure (`index.html`)
@@ -47,8 +47,8 @@ The `index.html` file provides the foundational structure for the website:
         - Other pages (About, Projects, Contact) will have their specific content within `<main>`.
     - **`<footer>`**: Contains copyright information and social media links.
     - **Script Loading Order (End of Body)**:
-        1.  Three.js (r128) from CDN.
-        2.  `BufferGeometryUtils.js` (local file: `js/three-utils/BufferGeometryUtils.js`).
+        1.  Three.js (r161) from CDN.
+        2.  BufferGeometryUtils.js from CDN.
         3.  Main application logic: `js/main.js`.
 
 ## 4. CSS Styling (`css/main.css`)

@@ -586,28 +586,7 @@ document.addEventListener('DOMContentLoaded', () => {
        ✨  initialise all subsystems
        ------------------------------------------------------------------ */
     init();
-
-    /* ------------------------------------------------------------------
-       � particles background & misc Easter eggs (unchanged)
-       ------------------------------------------------------------------ */
-    if (typeof tsParticles !== 'undefined' && document.getElementById('tsparticles')) {
-        tsParticles.load('tsparticles', {
-            fpsLimit: 60,
-            interactivity: {
-                events: { onHover: { enable: true, mode: 'bubble' }, onClick: { enable: true, mode: 'push' }, resize: true },
-                modes: { bubble: { distance: 150, size: 10, duration: 0.6, opacity: 0.8, color: '#38F321' }, push: { quantity: 3 } }
-            },
-            particles: {
-                number: { value: 60, density: { enable: true, value_area: 800 } },
-                color: { value: ['#00B4D8', '#5E60CE'] }, shape: { type: 'triangle' },
-                opacity: { value: { min: 0.2, max: 0.7 }, random: true, anim: { enable: true, speed: 0.8, opacity_min: 0.1 } },
-                size: { value: { min: 1, max: 4 }, random: true, anim: { enable: true, speed: 2, size_min: 0.5 } },
-                links: { enable: true, distance: 130, color: 'rgba(0, 180, 216, 0.3)', opacity: 0.3, width: 1 },
-                move: { enable: true, speed: 1.2, random: true, out_mode: 'out' }
-            },
-            detectRetina: true
-        });
-    }
+    initParticles();
 
     console.log('%c白帽駭客 — Stay ethical!', 'color:#38f321;font-family:Orbitron,sans-serif;font-size:1.2em;');
     console.log('%cWelcome to the console. If you\'re inspecting this, you might be one of us. Keep exploring, keep learning.', 'color:#00B4D8;');
@@ -635,6 +614,29 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ========= /main.js ========= */
+function initParticles() {
+    if (typeof tsParticles === "undefined") return;
+    const container = document.getElementById("tsparticles");
+    if (!container) return;
+    tsParticles.load("tsparticles", {
+        fpsLimit: 60,
+        interactivity: {
+            events: { onHover: { enable: true, mode: "bubble" }, onClick: { enable: true, mode: "push" }, resize: true },
+            modes: { bubble: { distance: 150, size: 10, duration: 0.6, opacity: 0.8, color: "#38F321" }, push: { quantity: 3 } }
+        },
+        particles: {
+            number: { value: 60, density: { enable: true, value_area: 800 } },
+            color: { value: ["#00B4D8", "#5E60CE"] },
+            shape: { type: "triangle" },
+            opacity: { value: { min: 0.2, max: 0.7 }, random: true, anim: { enable: true, speed: 0.8, opacity_min: 0.1 } },
+            size: { value: { min: 1, max: 4 }, random: true, anim: { enable: true, speed: 2, size_min: 0.5 } },
+            links: { enable: true, distance: 130, color: "rgba(0, 180, 216, 0.3)", opacity: 0.3, width: 1 },
+            move: { enable: true, speed: 1.2, random: true, out_mode: "out" }
+        },
+        detectRetina: true
+    });
+}
+
 
 function startMatrix(canvas) {
     const ctx = canvas.getContext('2d');
