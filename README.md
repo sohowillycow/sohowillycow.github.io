@@ -8,9 +8,9 @@ This project is a personal portfolio website for a white-hat hacker. It showcase
 - HTML5
 - CSS3
 - JavaScript (ES6+)
-- Three.js (r128)
-- BufferGeometryUtils.js (from Three.js r128 examples)
-- tsparticles.js
+- Three.js (r160)
+- BufferGeometryUtils.js (from Three.js r160 examples)
+- tsparticles.js (v3.3.0)
 
 ## 2. File Structure & Purpose
 
@@ -29,12 +29,12 @@ The `index.html` file provides the foundational structure for the website:
     - Meta tags for SEO (charset, viewport, description, keywords).
     - Favicon links.
     - Google Fonts integration (`Orbitron` for a futuristic feel, `Roboto` and `Noto Sans TC` for content).
-    - CDN link for `tsparticles.js`.
+    - CDN link for `tsparticles.js (v3.3.0)`.
     - CDN links for Prism.js (CSS and JS) for code highlighting.
     - Link to the main stylesheet: `css/main.css`.
 - **`<body>` Section**:
     - **Background Elements**:
-        - `#tsparticles`: Container for the `tsparticles.js` animated background.
+        - `#tsparticles`: Container for the `tsparticles.js (v3.3.0)` animated background.
         - `#digital-earth-container`: Container for the Three.js canvas, intended to display the 3D digital earth.
     - **`<header>`**: Fixed navigation bar at the top.
         - Logo (`.logo`).
@@ -47,7 +47,7 @@ The `index.html` file provides the foundational structure for the website:
         - Other pages (About, Projects, Contact) will have their specific content within `<main>`.
     - **`<footer>`**: Contains copyright information and social media links.
     - **Script Loading Order (End of Body)**:
-        1.  Three.js (r128) from CDN.
+        1.  Three.js (r160) from CDN.
         2.  `BufferGeometryUtils.js` (local file: `js/three-utils/BufferGeometryUtils.js`).
         3.  Main application logic: `js/main.js`.
 
