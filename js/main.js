@@ -1,5 +1,9 @@
+/* =========  main.js  ========= */
+
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Hamburger Menu Toggle ---
+    /* ------------------------------------------------------------------
+       🛰️  UI helpers (hamburger, lang‑switch, etc.)
+       ------------------------------------------------------------------ */
     const hamburger = document.querySelector('.hamburger');
     const navLinks = document.querySelector('.nav-links');
     const links = document.querySelectorAll('.nav-links li');
@@ -8,18 +12,16 @@ document.addEventListener('DOMContentLoaded', () => {
         hamburger.addEventListener('click', () => {
             navLinks.classList.toggle('nav-active');
             hamburger.classList.toggle('toggle');
-
-            links.forEach((link, index) => {
-                if (link.style.animation) {
-                    link.style.animation = '';
-                } else {
-                    link.style.animation = `navLinkFade 0.5s ease forwards ${index / 7 + 0.3}s`;
-                }
+            links.forEach((link, idx) => {
+                link.style.animation = link.style.animation ? ''
+                    : `navLinkFade 0.5s ease forwards ${idx / 7 + 0.3}s`;
             });
         });
     }
 
-    // --- Language Switch & Persistence ---
+    /* ------------------------------------------------------------------
+       🌐  language persistence (en  / zh‑TW)
+       ------------------------------------------------------------------ */
     const langSwitchLinks = document.querySelectorAll('.lang-switch a');
     const currentPath = window.location.pathname.split('/').pop();
     const currentLang = document.documentElement.lang;
@@ -27,776 +29,597 @@ document.addEventListener('DOMContentLoaded', () => {
     function switchToLanguage(targetLang) {
         let newPath;
         if (targetLang === 'zh-TW' || targetLang === 'zh') {
-            if (currentPath.includes('-zh.html')) {
-                newPath = currentPath;
-            } else {
+            if (!currentPath.includes('-zh.html')) {
                 newPath = currentPath.replace('.html', '-zh.html');
                 if (currentPath === '' || currentPath === 'index.html') newPath = 'index-zh.html';
+            } else {
+                newPath = currentPath;
             }
         } else {
             if (currentPath.includes('-zh.html')) {
                 newPath = currentPath.replace('-zh.html', '.html');
+                if (newPath === 'index-zh.html') newPath = 'index.html';
             } else {
                 newPath = currentPath;
-                if (newPath === 'index-zh.html') newPath = 'index.html';
             }
         }
-        if (newPath === '-zh.html') newPath = 'index-zh.html';
-        if (newPath === '.html' && (currentPath === '' || currentPath === 'index-zh.html')) newPath = 'index.html';
-
-
-        if (newPath !== currentPath && newPath !== '') {
-            window.location.href = newPath;
-        }
+        if (!newPath || newPath === '-zh.html') newPath = 'index-zh.html';
+        if (!newPath || newPath === '.html') newPath = 'index.html';
+        if (newPath !== currentPath) window.location.href = newPath;
     }
 
     langSwitchLinks.forEach(link => {
-        if (link.getAttribute('data-lang') === currentLang.substring(0, 2)) {
-            link.classList.add('active-lang');
-        } else {
-            link.classList.remove('active-lang');
-        }
-
-        link.addEventListener('click', (e) => {
+        link.classList.toggle('active-lang', link.dataset.lang === currentLang.substring(0, 2));
+        link.addEventListener('click', e => {
             e.preventDefault();
-            const selectedLang = link.getAttribute('data-lang');
-            localStorage.setItem('preferredLang', selectedLang);
-            const targetLangForSwitch = (selectedLang === 'zh') ? 'zh-TW' : 'en';
-            switchToLanguage(targetLangForSwitch);
+            const sel = link.dataset.lang;
+            localStorage.setItem('preferredLang', sel);
+            switchToLanguage(sel === 'zh' ? 'zh-TW' : 'en');
         });
     });
 
-    const preferredLang = localStorage.getItem('preferredLang');
-    if (preferredLang) {
-        const currentLangShort = currentLang.substring(0, 2);
-        if (preferredLang !== currentLangShort) {
-            if (preferredLang === 'zh' && !currentPath.includes('-zh.html')) {
-                switchToLanguage('zh-TW');
-            } else if (preferredLang === 'en' && currentPath.includes('-zh.html')) {
-                switchToLanguage('en');
-            }
-        }
+    const prefLang = localStorage.getItem('preferredLang');
+    if (prefLang && prefLang !== currentLang.substring(0, 2)) {
+        if (prefLang === 'zh' && !currentPath.includes('-zh.html')) switchToLanguage('zh-TW');
+        if (prefLang === 'en' && currentPath.includes('-zh.html')) switchToLanguage('en');
     }
 
-    // --- Three.js Earth Initialization ---
-    const earthContainer = document.getElementById('digital-earth-container');
-    let scene, camera, renderer, earthGroup, composer; // Added composer
-    const earthRadius = 0.85; // Moved to higher scope
+    /* ------------------------------------------------------------------
+       🌍  THREE.js DIGITAL EARTH INITIALISATION
+       ------------------------------------------------------------------ */
+    const container = document.getElementById('digital-earth-container');
+    const earthRadius = 0.85;
 
-    // --- Global Clock for Animation Timing ---
+    let scene, camera, renderer, composer, earthGroup;
     const clock = new THREE.Clock();
 
-    // attackColors will be passed to ArcSystem constructor
-    // activeArcs will be managed by ArcSystem instance
-
-    // Shader source code
-    const vertexShaderSource = `
-        varying vec2 vUv;
-        void main() {
-            vUv = uv;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    /* ----------------  MinPriorityQueue Implementation ---------------- */
+    // Simple MinPriorityQueue for Dijkstra, as suggested by change.md
+    class MinPriorityQueue {
+        constructor(options = {}) {
+            this._priority = options.priority || (x => x); // 取「數值」的函式 (change02.md L49)
+            this._elements = [];
         }
-    `;
 
-    const fragmentShaderSource = `
-        varying vec2 vUv;
-        uniform vec3 uColor;
-        uniform float uHeadProgress; // Current head position of the beam (0.0 to 1.0)
-        uniform float uTrailLength;  // Length of the beam/trail (0.0 to 1.0)
+        enqueue(element) {
+            this._elements.push(element);
+            // 使用 _priority 進行排序 (change02.md L51)
+            this._elements.sort((a, b) => this._priority(a) - this._priority(b));
+        }
 
-        void main() {
-            // vUv.x is the position along the tube (0.0 at start, 1.0 at end)
-            float beamStart = uHeadProgress - uTrailLength;
-            float beamEnd = uHeadProgress;
-
-            // Calculate alpha based on whether vUv.x is within the beam segment
-            // smoothstep can be used for softer edges, step for hard edges
-            float alpha = smoothstep(beamStart, beamStart + 0.05, vUv.x) * (1.0 - smoothstep(beamEnd - 0.05, beamEnd, vUv.x));
-            
-            // Ensure alpha is zero if outside the trail (handles progress < trailLength)
-            alpha *= step(0.0, vUv.x); // Ensure we are not before the start
-            alpha *= step(vUv.x, beamEnd); // Ensure we are not after the head
-
-            if (uHeadProgress < uTrailLength) { // Special handling when the beam is still "growing" from the start
-                 alpha *= smoothstep(0.0, beamStart + uTrailLength, vUv.x);
+        dequeue() {
+            if (this.isEmpty()) {
+                return undefined;
             }
-
-
-            if (alpha < 0.01) discard;
-
-            // Optional: Make the head brighter
-            float headGlow = smoothstep(uHeadProgress - 0.05, uHeadProgress, vUv.x) * 0.5; // Extra glow at the very head
-
-            gl_FragColor = vec4(uColor, alpha * 0.85 + headGlow * 0.5);
-        }
-    `;
-
-    const particleVertexShaderSource = `
-        varying vec3 vNormal_view;
-        varying vec3 vPosition_view;
-
-        void main() {
-            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-            vPosition_view = mvPosition.xyz;
-            vNormal_view = normalize(normalMatrix * normal); // Normal in view space
-            gl_Position = projectionMatrix * mvPosition;
-        }
-    `;
-
-    const particleFragmentShaderSource = `
-        varying vec3 vNormal_view;
-        varying vec3 vPosition_view;
-
-        uniform vec3 uParticleBaseColor;
-        uniform float uFresnelPower;    // e.g., 3.0
-        uniform float uCoreSharpness;   // e.g., 1.5
-
-        void main() {
-            vec3 normal = normalize(vNormal_view);
-            vec3 viewDir = normalize(-vPosition_view); // Vector from fragment to camera
-
-            float fresnelTerm = 1.0 - clamp(dot(viewDir, normal), 0.0, 1.0); // 0 at center, 1 at edge
-            float fresnelEffect = pow(fresnelTerm, uFresnelPower);
-
-            float coreGlow = pow(clamp(dot(viewDir, normal), 0.0, 1.0), uCoreSharpness); // Brighter at center
-
-            float alpha = clamp(coreGlow * 0.7 + fresnelEffect * 0.8, 0.0, 1.0); // Combine, base opacity for core
-
-            if (alpha < 0.01) discard;
-
-            gl_FragColor = vec4(uParticleBaseColor, alpha);
-        }
-    `;
-
-    // Trail Segment Geometry & Material
-    const trailSegmentGeo = new THREE.SphereGeometry(0.008, 5, 5);
-    // Shader for trail segments
-    const trailVertexShaderSource = `
-        attribute float aInstanceProgress; // 0 (head) to 1 (tail end)
-        varying float vInstanceProgress;
-        void main() {
-            vInstanceProgress = aInstanceProgress;
-            gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
-        }
-    `;
-    const trailFragmentShaderSource = `
-        varying float vInstanceProgress;
-        uniform vec3 uTrailColor;
-        uniform float uBaseOpacity;
-        void main() {
-            float opacity = uBaseOpacity * (1.0 - vInstanceProgress); // Fades out towards the tail end
-            if (opacity < 0.01) discard;
-            gl_FragColor = vec4(uTrailColor, opacity);
-        }
-    `;
-    const trailSegmentMaterial = new THREE.ShaderMaterial({
-        vertexShader: trailVertexShaderSource,
-        fragmentShader: trailFragmentShaderSource,
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        uniforms: {
-            uTrailColor: { value: new THREE.Color(0xccddff) }, // Light blueish-white trail
-            uBaseOpacity: { value: 0.7 }
-        }
-    });
-    const NUM_TRAIL_SEGMENTS = 8;
-
-
-    // The createAttackArc function is now a method of ArcSystem.
-    // Removed redundant/commented-out clock declaration.
-
-    let bloomPass; // Declare bloomPass here to access it in onWindowResize
-
-    // --- ArcSystem Class Definition ---
-    class ArcSystem {
-        constructor(sceneOrGroup, baseGeometry, attackColorsConfig, particleAssets = {}) {
-            this.container = sceneOrGroup; // The object to add arcs to (e.g., earthGroup)
-            this.baseGeometry = baseGeometry; // For node positions
-            this.attackColors = attackColorsConfig;
-            this.particleAssets = particleAssets; // For shared geo/mat if implemented
-
-            this.activeArcs = [];
-            this.earthRadius = 0.85; // Assuming this is relatively constant for arc calculations
-            this.frameCount = 0; // Frame counter for attack triggering
-
-            // Shader sources - can be defined here or passed in if they become more complex/configurable
-            this.arcVertexShader = `
-                varying vec2 vUv;
-                void main() {
-                    vUv = uv;
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                }
-            `;
-            this.arcFragmentShader = `
-                varying vec2 vUv;
-                uniform vec3 uColor;
-                uniform float uHeadProgress;
-                uniform float uTrailLength;
-                void main() {
-                    float beamStart = uHeadProgress - uTrailLength;
-                    float beamEnd = uHeadProgress;
-                    float alpha = smoothstep(beamStart, beamStart + 0.05, vUv.x) * (1.0 - smoothstep(beamEnd - 0.05, beamEnd, vUv.x));
-                    alpha *= step(0.0, vUv.x);
-                    alpha *= step(vUv.x, beamEnd);
-                    if (uHeadProgress < uTrailLength) {
-                         alpha *= smoothstep(0.0, beamStart + uTrailLength, vUv.x);
-                    }
-                    if (alpha < 0.01) discard;
-                    float headGlow = smoothstep(uHeadProgress - 0.05, uHeadProgress, vUv.x) * 0.5;
-                    gl_FragColor = vec4(uColor, alpha * 0.85 + headGlow * 0.5);
-                }
-            `;
-            this.particleVertexShader = `
-                varying vec3 vNormal_view;
-                varying vec3 vPosition_view;
-                void main() {
-                    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-                    vPosition_view = mvPosition.xyz;
-                    vNormal_view = normalize(normalMatrix * normal);
-                    gl_Position = projectionMatrix * mvPosition;
-                }
-            `;
-            this.particleFragmentShader = `
-                varying vec3 vNormal_view;
-                varying vec3 vPosition_view;
-                uniform vec3 uParticleBaseColor;
-                uniform float uFresnelPower;
-                uniform float uCoreSharpness;
-                void main() {
-                    vec3 normal = normalize(vNormal_view);
-                    vec3 viewDir = normalize(-vPosition_view);
-                    float fresnelTerm = 1.0 - clamp(dot(viewDir, normal), 0.0, 1.0);
-                    float fresnelEffect = pow(fresnelTerm, uFresnelPower);
-                    float coreGlow = pow(clamp(dot(viewDir, normal), 0.0, 1.0), uCoreSharpness);
-                    float alpha = clamp(coreGlow * 0.7 + fresnelEffect * 0.8, 0.0, 1.0);
-                    if (alpha < 0.01) discard;
-                    gl_FragColor = vec4(uParticleBaseColor, alpha);
-                }
-            `;
-            this.trailVertexShader = `
-                attribute float aInstanceProgress;
-                varying float vInstanceProgress;
-                void main() {
-                    vInstanceProgress = aInstanceProgress;
-                    gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
-                }
-            `;
-            this.trailFragmentShader = `
-                varying float vInstanceProgress;
-                uniform vec3 uTrailColor;
-                uniform float uBaseOpacity;
-                void main() {
-                    float opacity = uBaseOpacity * (1.0 - vInstanceProgress);
-                    if (opacity < 0.01) discard;
-                    gl_FragColor = vec4(uTrailColor, opacity);
-                }
-            `;
-
-            // Shared assets (can be expanded)
-            this.trailSegmentGeo = this.particleAssets.trailSegmentGeo || new THREE.SphereGeometry(0.008, 5, 5);
-            this.trailSegmentMaterial = this.particleAssets.trailSegmentMaterial || new THREE.ShaderMaterial({
-                vertexShader: this.trailVertexShader,
-                fragmentShader: this.trailFragmentShader,
-                transparent: true,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false,
-                uniforms: {
-                    uTrailColor: { value: new THREE.Color(0xccddff) },
-                    uBaseOpacity: { value: 0.7 }
-                }
-            });
-            this.NUM_TRAIL_SEGMENTS = this.particleAssets.numTrailSegments || 8;
+            return this._elements.shift();
         }
 
-        createAttack(startPointVec3, endPointVec3, colorValue) {
-            if (!this.container || !startPointVec3 || !endPointVec3) {
-                console.warn("ArcSystem.createAttack: Missing container or points.", startPointVec3, endPointVec3);
-                return;
-            }
-
-            let chosenColor = colorValue;
-            if (typeof chosenColor === 'undefined') { // If no color passed, pick one
-                const threatLevels = Object.keys(this.attackColors);
-                const randomThreatLevel = threatLevels[Math.floor(Math.random() * threatLevels.length)];
-                const colorsForLevel = this.attackColors[randomThreatLevel];
-                chosenColor = colorsForLevel[Math.floor(Math.random() * colorsForLevel.length)];
-            }
-            // console.log("ArcSystem: Creating arc from:", startPointVec3, "to:", endPointVec3, "color:", chosenColor.toString(16));
-
-            const midPoint = new THREE.Vector3().addVectors(startPointVec3, endPointVec3).multiplyScalar(0.5);
-            const controlPoint = midPoint.clone().normalize().multiplyScalar(midPoint.length() + this.earthRadius * 0.4);
-
-            const curve = new THREE.QuadraticBezierCurve3(startPointVec3, controlPoint, endPointVec3);
-            const tubeRadius = 0.003;
-            const tubeGeometry = new THREE.TubeGeometry(curve, 32, tubeRadius, 8, false);
-            const arcMaterial = new THREE.ShaderMaterial({
-                vertexShader: this.arcVertexShader,
-                fragmentShader: this.arcFragmentShader,
-                transparent: true,
-                depthWrite: false,
-                blending: THREE.AdditiveBlending,
-                uniforms: {
-                    uColor: { value: new THREE.Color(chosenColor) },
-                    uHeadProgress: { value: 0.0 },
-                    uTrailLength: { value: 0.2 + Math.random() * 0.3 }
-                }
-            });
-            const arcMesh = new THREE.Mesh(tubeGeometry, arcMaterial);
-
-            const particleGeo = new THREE.SphereGeometry(0.015, 8, 8);
-            const baseParticleColor = new THREE.Color(chosenColor).offsetHSL(0, 0.05, 0.15);
-            const particleMaterial = new THREE.ShaderMaterial({
-                vertexShader: this.particleVertexShader,
-                fragmentShader: this.particleFragmentShader,
-                transparent: true,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false,
-                uniforms: {
-                    uParticleBaseColor: { value: baseParticleColor },
-                    uFresnelPower: { value: 3.5 },
-                    uCoreSharpness: { value: 1.0 }
-                }
-            });
-            const particleMesh = new THREE.Mesh(particleGeo, particleMaterial);
-            particleMesh.position.copy(startPointVec3);
-
-            const trailInstancedMesh = new THREE.InstancedMesh(this.trailSegmentGeo, this.trailSegmentMaterial, this.NUM_TRAIL_SEGMENTS);
-            const dummyMatrix = new THREE.Object3D();
-            const trailProgressArray = new Float32Array(this.NUM_TRAIL_SEGMENTS);
-            for (let i = 0; i < this.NUM_TRAIL_SEGMENTS; i++) {
-                dummyMatrix.position.copy(startPointVec3);
-                dummyMatrix.scale.set(0, 0, 0);
-                dummyMatrix.updateMatrix();
-                trailInstancedMesh.setMatrixAt(i, dummyMatrix.matrix);
-                trailProgressArray[i] = i / this.NUM_TRAIL_SEGMENTS;
-            }
-            trailInstancedMesh.geometry.setAttribute('aInstanceProgress', new THREE.InstancedBufferAttribute(trailProgressArray, 1));
-            trailInstancedMesh.instanceMatrix.needsUpdate = true;
-
-            this.container.add(arcMesh);
-            this.container.add(particleMesh);
-            this.container.add(trailInstancedMesh);
-
-            const arcLifetime = 2.5;
-            const newArcData = {
-                mesh: arcMesh,
-                material: arcMaterial,
-                particleMesh: particleMesh,
-                curve: curve,
-                elapsedTime: 0,
-                totalLife: arcLifetime,
-                progress: 0,
-                trailInstancedMesh: trailInstancedMesh,
-                trailPositions: []
-            };
-            this.activeArcs.push(newArcData);
-
-            setTimeout(() => {
-                if (arcMesh.parent) arcMesh.parent.remove(arcMesh);
-                arcMesh.geometry.dispose();
-                arcMesh.material.dispose();
-
-                if (particleMesh.parent) particleMesh.parent.remove(particleMesh);
-                particleMesh.geometry.dispose();
-                particleMesh.material.dispose();
-
-                if (trailInstancedMesh.parent) trailInstancedMesh.parent.remove(trailInstancedMesh);
-                // Note: trailSegmentGeo and trailSegmentMaterial are potentially shared,
-                // so they are NOT disposed here. They are managed by the ArcSystem instance.
-
-                this.activeArcs = this.activeArcs.filter(item => item.mesh !== arcMesh);
-            }, arcLifetime * 1000); // Ensure timeout is in milliseconds
+        isEmpty() {
+            return this._elements.length === 0;
         }
 
-        update(deltaTime) {
-            this.activeArcs.forEach(attackData => {
-                // Animate the peak particle first to get its progress
-                let particleProgress = 0;
-                if (attackData.particleMesh && attackData.curve) {
-                    attackData.elapsedTime += deltaTime; // Use passed deltaTime
-                    let t = attackData.elapsedTime / attackData.totalLife;
-                    let clampedT = Math.max(0, Math.min(1, t));
-                    attackData.progress = 1 - Math.pow(1 - clampedT, 3); // easeOutCubic
-                    particleProgress = attackData.progress;
-
-                    if (particleProgress < 1) {
-                        attackData.curve.getPointAt(particleProgress, attackData.particleMesh.position);
-                        attackData.particleMesh.visible = true;
-
-                        // Update trail positions
-                        attackData.trailPositions.unshift(attackData.particleMesh.position.clone());
-                        if (attackData.trailPositions.length > this.NUM_TRAIL_SEGMENTS) { // Use this.NUM_TRAIL_SEGMENTS
-                            attackData.trailPositions.pop();
-                        }
-                    } else {
-                        attackData.particleMesh.visible = false;
-                        // Trail will use last known positions
-                    }
-                }
-
-                // Animate shader for the arc tube, syncing with particle progress
-                if (attackData.material && attackData.material.uniforms.uHeadProgress) {
-                    attackData.material.uniforms.uHeadProgress.value = particleProgress;
-                }
-
-                // Update Trail InstancedMesh
-                if (attackData.trailInstancedMesh) {
-                    const M = new THREE.Matrix4();
-                    for (let i = 0; i < this.NUM_TRAIL_SEGMENTS; i++) { // Use this.NUM_TRAIL_SEGMENTS
-                        if (i < attackData.trailPositions.length) {
-                            const scaleFactor = Math.max(0.05, 0.9 * (1.0 - (i / this.NUM_TRAIL_SEGMENTS)));
-                            M.compose(attackData.trailPositions[i], new THREE.Quaternion(), new THREE.Vector3(scaleFactor, scaleFactor, scaleFactor));
-                            attackData.trailInstancedMesh.setMatrixAt(i, M);
-                        } else {
-                            M.identity().scale(new THREE.Vector3(0, 0, 0)); // Hide unused segments
-                            attackData.trailInstancedMesh.setMatrixAt(i, M);
-                        }
-                    }
-                    attackData.trailInstancedMesh.instanceMatrix.needsUpdate = true;
-                }
-            });
-
-            // Note: The logic for filtering completed arcs (this.activeArcs = this.activeArcs.filter(...))
-            // is currently handled by the setTimeout in the createAttack method, which removes arcs after their lifetime.
-            // If more immediate or complex cleanup based on progress is needed in the future,
-            // it could be added here.
-        }
-
-        triggerRandomAttack() {
-            this.frameCount++;
-
-            let performClusterAttack = false;
-            // Determine if a cluster attack should happen (e.g., every 300 frames, or roughly 10 seconds if attacks are checked every 30 frames)
-            if (this.frameCount % 200 === 0) { // Adjusted for potentially more frequent clusters for testing, e.g. every ~6-7 seconds
-                performClusterAttack = true;
-            }
-
-            // Determine if any attack (regular or cluster) should be triggered
-            const shouldTriggerRegularAttack = (this.frameCount % 30 === 0) && !performClusterAttack;
-            const shouldTriggerAttack = shouldTriggerRegularAttack || performClusterAttack;
-
-            if (shouldTriggerAttack) {
-                if (!this.baseGeometry || !this.baseGeometry.attributes.position) {
-                    console.warn("ArcSystem: Base geometry not available for triggering attack.");
-                    return;
-                }
-                const positions = this.baseGeometry.attributes.position;
-                const numVertices = positions.count;
-
-                if (numVertices > 1) {
-                    const attackCount = performClusterAttack ? (3 + Math.floor(Math.random() * 3)) : 1; // Cluster: 3-5 arcs, Regular: 1 arc
-                    let mainOriginIndex = -1;
-                    let mainOriginPoint = null;
-
-                    if (performClusterAttack) {
-                        mainOriginIndex = Math.floor(Math.random() * numVertices);
-                        mainOriginPoint = new THREE.Vector3().fromBufferAttribute(positions, mainOriginIndex);
-                        // console.log(`ArcSystem: Cluster attack! Origin index: ${mainOriginIndex}, Count: ${attackCount}`);
-                    }
-
-                    for (let i = 0; i < attackCount; i++) {
-                        let startPoint;
-                        let originIndexForThisArc;
-
-                        if (performClusterAttack && mainOriginPoint) {
-                            startPoint = mainOriginPoint.clone();
-                            originIndexForThisArc = mainOriginIndex;
-                        } else {
-                            originIndexForThisArc = Math.floor(Math.random() * numVertices);
-                            startPoint = new THREE.Vector3().fromBufferAttribute(positions, originIndexForThisArc);
-                        }
-
-                        let targetIndex = Math.floor(Math.random() * numVertices);
-                        while (targetIndex === originIndexForThisArc) { // Ensure different start and end points
-                            targetIndex = Math.floor(Math.random() * numVertices);
-                        }
-                        const endPoint = new THREE.Vector3().fromBufferAttribute(positions, targetIndex);
-
-                        // createAttack method will handle color selection if 'undefined' is passed.
-                        this.createAttack(startPoint, endPoint, undefined);
-                    }
-                }
-            }
-        }
-
-        // Helper to get a random node position
-        _getRandomNodePosition() {
-            if (!this.baseGeometry || !this.baseGeometry.attributes.position) return null;
-            const positions = this.baseGeometry.attributes.position;
-            const numVertices = positions.count;
-            if (numVertices <= 1) return null;
-            const randomIndex = Math.floor(Math.random() * numVertices);
-            return new THREE.Vector3().fromBufferAttribute(positions, randomIndex);
+        get size() {
+            return this._elements.length;
         }
     }
-    // --- End ArcSystem Class Definition ---
 
-    let arcSystemInstance; // To hold the instance of ArcSystem
+    /* ----------------  Graph Building Function ---------------- */
+    // As per change.md
+    function buildGraph(geo) {
+        const n = geo.attributes.position.count;
+        const adj = Array.from({ length: n }, () => new Set());
 
-    function initThreeJSEarth() {
-        if (!earthContainer || typeof THREE === 'undefined') {
-            console.warn("Three.js library or #digital-earth-container not found. Earth will not be rendered.");
-            return;
+        if (geo.index) { // Important: Check if geometry is indexed
+            const idx = geo.index.array;
+            for (let i = 0; i < idx.length; i += 3) {
+                const [a, b, c] = [idx[i], idx[i + 1], idx[i + 2]];
+                adj[a].add(b).add(c);
+                adj[b].add(a).add(c);
+                adj[c].add(a).add(b);
+            }
+        } else {
+            // Fallback for non-indexed geometries (though IcosahedronGeometry is indexed)
+            // This part would need a more complex way to determine adjacency
+            // based on vertex proximity if geo.index is null.
+            // For IcosahedronGeometry, geo.index should exist.
+            console.warn("Geometry is not indexed, graph construction might be incomplete or incorrect.");
+        }
+        return adj.map(set => [...set]); // → Array<number[]>
+    }
+
+
+    /* ----------------  common vertex / fragment shaders ---------------- */
+
+    const tubeVS = /* glsl */`
+        varying vec2 vUv;
+        void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }
+    `;
+
+    const tubeFS = /* glsl */`
+        varying vec2 vUv;
+        uniform vec3  uColor;
+        uniform float uHeadProgress;
+        uniform float uTrailLength;
+        void main(){
+            float start = uHeadProgress - uTrailLength;
+            float alpha = smoothstep(start, start+0.05, vUv.x) * (1. - smoothstep(uHeadProgress-0.05, uHeadProgress, vUv.x));
+            alpha *= step(0., vUv.x) * step(vUv.x, uHeadProgress);
+            if(uHeadProgress < uTrailLength) alpha *= smoothstep(0., start+uTrailLength, vUv.x);
+            if(alpha < 0.01) discard;
+            float headGlow = smoothstep(uHeadProgress-0.05, uHeadProgress, vUv.x)*0.5;
+            gl_FragColor = vec4(uColor, alpha*0.85 + headGlow*0.5);
+        }
+    `;
+
+    const particleVS = /* glsl */`
+        varying vec3 vN,vP;
+        void main(){ vec4 mv= modelViewMatrix*vec4(position,1.); vP=mv.xyz; vN=normalize(normalMatrix*normal); gl_Position = projectionMatrix*mv; }
+    `;
+
+    const particleFS = /* glsl */`
+        varying vec3 vN,vP; uniform vec3 uColor; uniform float uFresnel, uSharp;
+        void main(){ vec3 V = normalize(-vP); float fres = 1.-clamp(dot(V,vN),0.,1.); float f = pow(fres,uFresnel); float core = pow(clamp(dot(V,vN),0.,1.),uSharp);
+            float a = clamp(core*0.7 + f*0.8,0.,1.); if(a<0.01) discard; gl_FragColor = vec4(uColor,a); }
+    `;
+
+    const trailSegVS = /* glsl */`
+        attribute float aProgress; varying float vP; void main(){ vP=aProgress; gl_Position = projectionMatrix*modelViewMatrix*instanceMatrix*vec4(position,1.); }
+    `;
+
+    const trailSegFS = /* glsl */`
+        varying float vP; uniform vec3 uColor; uniform float uBase;
+        void main(){ float a = uBase*(1.-vP); if(a<0.01) discard; gl_FragColor = vec4(uColor,a); }
+    `;
+
+    const NUM_TRAIL_SEGMENTS = 8;
+
+    /* ------------------------------------------------------------------
+       ⚔️  ArcSystem – handles creation / update of attack beams
+       ------------------------------------------------------------------ */
+
+    class ArcSystem {
+        constructor(group, nodeGeo, attackColors, graph) { // ★ graph is already passed due to previous diff
+            this.host = group;      // earthGroup
+            this.nodeGeo = nodeGeo; // This is baseGeo from init
+            this.colors = attackColors;
+            this.graph = graph;                            // ★ Store graph
+            this.activeArcs = [];
+            this.frameCount = 0;
+            // shared geometries / materials
+            this.trailGeo = new THREE.SphereGeometry(0.008, 5, 5);
+            this.trailMat = new THREE.ShaderMaterial({
+                vertexShader: trailSegVS,
+                fragmentShader: trailSegFS,
+                transparent: true, depthWrite: false,
+                blending: THREE.AdditiveBlending,
+                uniforms: { uColor: { value: new THREE.Color(0xccddff) }, uBase: { value: 0.7 } }
+            });
         }
 
-        scene = new THREE.Scene(); // Assign to higher-scoped scene
+        /* --- (1) 以 Dijkstra 找 node 索引路徑 --- */
+        // As per change.md
+        shortestPath(sIdx, eIdx) {
+            const dist = new Array(this.graph.length).fill(Infinity);
+            const prev = new Array(this.graph.length).fill(-1);
+            // Uses the MinPriorityQueue defined earlier in the file
+            const pq = new MinPriorityQueue({ priority: d => d[1] });
 
-        camera = new THREE.PerspectiveCamera(75, earthContainer.clientWidth / earthContainer.clientHeight, 0.1, 1000);
+            dist[sIdx] = 0;
+            pq.enqueue([sIdx, 0]);
+
+            let u, d; // Declare u and d outside the loop for broader scope if needed for debugging
+            while (!pq.isEmpty()) {
+                // My MinPriorityQueue implementation does not wrap in .element
+                const dequeuedElement = pq.dequeue();
+                u = dequeuedElement[0];
+                d = dequeuedElement[1];
+
+                if (d > dist[u]) continue; // ← 新增，丟掉過期條目 (change02.md L58)
+                if (u === eIdx) break;
+
+                if (this.graph[u]) {
+                    for (const v of this.graph[u]) {
+                        const w = 1;
+                        if (d + w < dist[v]) {
+                            dist[v] = d + w;
+                            prev[v] = u;
+                            pq.enqueue([v, dist[v]]);
+                        }
+                    }
+                }
+            }
+            const path = [];
+            for (let currentV = eIdx; currentV !== -1 && path.length < this.graph.length; currentV = prev[currentV]) {
+                path.push(currentV);
+                if (currentV === sIdx) break; // Path reconstruction complete if we reached start
+            }
+
+            // Check if a valid path was found
+            if (path.length === 0 || path[path.length - 1] !== sIdx) {
+                // If sIdx and eIdx are the same, path should be [sIdx]
+                if (sIdx === eIdx) return [sIdx];
+                return []; // No path found or path doesn't reach start
+            }
+
+            return path.reverse();
+        }
+
+        /* --- (2) 產生貼地曲線並建立 tubeMesh 等 --- */
+        // Modified as per change.md
+        createArc(startIdx, endIdx, color) {
+            if (startIdx === endIdx) return;       // very first line of createArc() (change02.md L65)
+            const idxPath = this.shortestPath(startIdx, endIdx);
+            if (!idxPath || idxPath.length < 1) return; // Path needs at least one point (for sIdx === eIdx) or two points
+
+            const posAttr = this.nodeGeo.attributes.position;
+            const rough = idxPath.map(i => new THREE.Vector3().fromBufferAttribute(posAttr, i));
+
+            const smooth = [];
+            const nSeg = 4;
+
+            if (rough.length < 2) { // If path has only one point (startIdx === endIdx)
+                if (rough.length === 1) smooth.push(rough[0].clone().normalize().multiplyScalar(earthRadius));
+            } else {
+                for (let i = 0; i < rough.length - 1; i++) {
+                    const a = rough[i].clone();
+                    const b = rough[i + 1].clone();
+                    for (let t = 0; t < nSeg; t++) {
+                        const p = a.clone().lerp(b, t / nSeg).normalize().multiplyScalar(earthRadius);
+                        smooth.push(p);
+                    }
+                }
+                smooth.push(rough[rough.length - 1].clone().normalize().multiplyScalar(earthRadius));
+            }
+
+            if (smooth.length < 2 && !(startIdx === endIdx && smooth.length === 1)) { // Need at least 2 points for CatmullRom, unless start=end
+                if (startIdx === endIdx && smooth.length === 1) {
+                    // allow single point for same start/end, tube will be just a dot
+                } else {
+                    return;
+                }
+            }
+
+            // For single point path (startIdx === endIdx), CatmullRomCurve3 needs at least two identical points
+            const curvePoints = (smooth.length === 1) ? [smooth[0], smooth[0].clone()] : smooth;
+            const curve = new THREE.CatmullRomCurve3(curvePoints, false, 'catmullrom', 0.6);
+
+            let c = color;
+            if (c === undefined) {
+                const levels = Object.keys(this.colors);
+                const lvl = levels[Math.floor(Math.random() * levels.length)];
+                const arr = this.colors[lvl];
+                c = arr[Math.floor(Math.random() * arr.length)];
+            }
+
+            const tubeGeo = new THREE.TubeGeometry(curve, Math.max(1, curvePoints.length * 3), 0.003, 8, false);
+            const tubeMat = new THREE.ShaderMaterial({
+                vertexShader: tubeVS, fragmentShader: tubeFS, transparent: true, depthWrite: false,
+                blending: THREE.AdditiveBlending,
+                uniforms: { uColor: { value: new THREE.Color(c) }, uHeadProgress: { value: 0. }, uTrailLength: { value: 0. } }
+            });
+            const tubeMesh = new THREE.Mesh(tubeGeo, tubeMat);
+
+            const pGeo = new THREE.SphereGeometry(0.015, 8, 8);
+            const pMat = new THREE.ShaderMaterial({
+                vertexShader: particleVS, fragmentShader: particleFS, transparent: true, depthWrite: false,
+                blending: THREE.AdditiveBlending,
+                uniforms: { uColor: { value: new THREE.Color(c).offsetHSL(0, 0.05, 0.15) }, uFresnel: { value: 3.5 }, uSharp: { value: 1.0 } }
+            });
+            const pMesh = new THREE.Mesh(pGeo, pMat);
+            pMesh.position.copy(curvePoints[0]);
+
+            const trailInst = new THREE.InstancedMesh(this.trailGeo, this.trailMat, NUM_TRAIL_SEGMENTS);
+            const tmp = new THREE.Object3D();
+            const progAttr = new Float32Array(NUM_TRAIL_SEGMENTS);
+            for (let i = 0; i < NUM_TRAIL_SEGMENTS; i++) {
+                tmp.position.copy(curvePoints[0]); tmp.scale.set(0, 0, 0); tmp.updateMatrix();
+                trailInst.setMatrixAt(i, tmp.matrix); progAttr[i] = i / NUM_TRAIL_SEGMENTS;
+            }
+            trailInst.geometry.setAttribute('aProgress', new THREE.InstancedBufferAttribute(progAttr, 1));
+            trailInst.instanceMatrix.needsUpdate = true;
+
+            this.host.add(tubeMesh); this.host.add(pMesh); this.host.add(trailInst);
+
+            const initialLen = 0.2 + Math.random() * 0.3;
+            tubeMat.uniforms.uTrailLength.value = initialLen;
+
+            const avgLen = 3.2;
+            const baseTime = 2.2;
+            // 防甚短 life (change02.md L70)
+            const curveLen = Math.max(curve.getLength(), 0.2);
+            const life = baseTime * (curveLen / avgLen);
+
+            const data = {
+                curve,
+                tubeMesh, tubeMat,
+                pMesh,
+                trailInst,
+                trailPositions: [],
+                elapsed: 0,
+                life,
+                initialTrailLength: initialLen,
+                tailFadeElapsed: 0,
+                trailFadeInterval: 0.04
+            };
+            this.activeArcs.push(data);
+
+            setTimeout(() => {
+                [tubeMesh, pMesh, trailInst].forEach(m => { if (m.parent) m.parent.remove(m); });
+                tubeGeo.dispose(); tubeMat.dispose(); pGeo.dispose(); pMat.dispose();
+                this.activeArcs = this.activeArcs.filter(a => a !== data);
+            }, life * 1000);
+        }
+
+        /** per‑frame update */
+        update(dt) {
+            this.activeArcs.forEach(a => {
+                /* --- head particle & progress --- */
+                a.elapsed += dt;
+                const t = Math.min(1, a.elapsed / a.life);
+                const p = 1 - Math.pow(1 - t, 3); // easeOutCubic
+
+                if (p < 1) {
+                    a.curve.getPointAt(p, a.pMesh.position);
+                    a.pMesh.visible = true;
+                    // push trail head
+                    a.trailPositions.unshift(a.pMesh.position.clone());
+                    if (a.trailPositions.length > NUM_TRAIL_SEGMENTS) a.trailPositions.pop();
+                } else {
+                    a.pMesh.visible = false;
+                    /* tail‑fade after arrival - "做法 A" from change.md */
+
+                    // 1. Get the end position of the curve
+                    const endPos = new THREE.Vector3();
+                    a.curve.getPointAt(1, endPos); // t = 1 is the end point
+
+                    // 2. Unshift the end position to the trailPositions array each frame after head arrival
+                    a.trailPositions.unshift(endPos.clone());
+
+                    // 3. Pop from the tail at a fixed interval to maintain/shorten the trail
+                    a.tailFadeElapsed += dt;
+                    if (a.tailFadeElapsed >= a.trailFadeInterval) {
+                        a.tailFadeElapsed = 0;
+                        if (a.trailPositions.length > 0) { // Only pop if there are positions
+                            a.trailPositions.pop();          // This shortens the visual trail
+                        }
+                    }
+
+                    // Ensure trailPositions does not exceed NUM_TRAIL_SEGMENTS if unshifting makes it too long
+                    // before the pop can catch up (though with unshift+pop it should balance or shrink)
+                    while (a.trailPositions.length > NUM_TRAIL_SEGMENTS) {
+                        a.trailPositions.pop();
+                    }
+
+                    // 4. Update shader's trail length based on current trailPositions length
+                    const ratio = a.trailPositions.length / NUM_TRAIL_SEGMENTS;
+                    a.tubeMat.uniforms.uTrailLength.value = a.initialTrailLength * ratio;
+                }
+
+                // sync shader head progress
+                a.tubeMat.uniforms.uHeadProgress.value = p;
+
+                /* --- update instanced trail --- */
+                const M = new THREE.Matrix4();
+                for (let i = 0; i < NUM_TRAIL_SEGMENTS; i++) {
+                    if (i < a.trailPositions.length) {
+                        const s = Math.max(0.05, 0.9 * (1 - i / NUM_TRAIL_SEGMENTS));
+                        M.compose(a.trailPositions[i], new THREE.Quaternion(), new THREE.Vector3(s, s, s));
+                    } else {
+                        M.identity(); M.scale(new THREE.Vector3(0, 0, 0));
+                    }
+                    a.trailInst.setMatrixAt(i, M);
+                }
+                a.trailInst.instanceMatrix.needsUpdate = true;
+            });
+        }
+
+        /** probabilistic attack spawning each frame */
+        maybeTrigger() {
+            this.frameCount++;
+            const cluster = this.frameCount % 200 === 0;
+            const single = !cluster && this.frameCount % 30 === 0;
+            if (!cluster && !single) return;
+
+            const posAttr = this.nodeGeo.attributes.position;
+            if (!posAttr) return;
+            const n = posAttr.count;
+            if (n < 2) return;
+
+            const attacks = cluster ? 3 + Math.floor(Math.random() * 3) : 1;
+            const commonOriginIdx = cluster ? Math.floor(Math.random() * n) : null;
+
+            for (let i = 0; i < attacks; i++) {
+                const startIdx = commonOriginIdx !== null ? commonOriginIdx : Math.floor(Math.random() * n);
+                let endIdx = Math.floor(Math.random() * n);
+                while (endIdx === startIdx) { // Ensure endIdx is different from startIdx
+                    endIdx = Math.floor(Math.random() * n);
+                }
+                this.createArc(startIdx, endIdx); // ★ Pass indices
+            }
+        }
+    }
+
+    /* ------------------------------------------------------------------
+       🚀  init THREE scene
+       ------------------------------------------------------------------ */
+
+    let arcSystem;
+    let adjacency; // To store the graph
+
+    function init() {
+        if (!container || !THREE) return console.warn('THREE.js not found');
+
+        /* scene / camera / renderer */
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
         camera.position.z = 1.8;
 
         renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-        renderer.setSize(earthContainer.clientWidth, earthContainer.clientHeight);
+        renderer.setSize(container.clientWidth, container.clientHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setClearAlpha(0.0);
+        renderer.setClearAlpha(0);
+        container.innerHTML = ''; container.appendChild(renderer.domElement);
 
-        while (earthContainer.firstChild) {
-            earthContainer.removeChild(earthContainer.firstChild);
-        }
-        earthContainer.appendChild(renderer.domElement);
-
-        // Post-processing
-        if (typeof THREE.EffectComposer !== 'undefined' && typeof THREE.RenderPass !== 'undefined' && typeof THREE.UnrealBloomPass !== 'undefined') {
+        /* post‑processing (bloom) */
+        if (THREE.EffectComposer && THREE.RenderPass && THREE.UnrealBloomPass) {
             composer = new THREE.EffectComposer(renderer);
             composer.addPass(new THREE.RenderPass(scene, camera));
+            const bloom = new THREE.UnrealBloomPass(new THREE.Vector2(container.clientWidth, container.clientHeight), 1.2, 0.4, 0.85);
+            composer.addPass(bloom);
+        }
 
-            bloomPass = new THREE.UnrealBloomPass(
-                new THREE.Vector2(earthContainer.clientWidth, earthContainer.clientHeight),
-                1.2, // strength
-                0.4, // radius
-                0.85 // threshold
-            );
-            composer.addPass(bloomPass);
+        /* earth nodes & edges */
+        let rawBaseGeo = new THREE.IcosahedronGeometry(earthRadius, 3);
+        console.log("--- Diagnosing rawBaseGeo ---");
+        console.log("rawBaseGeo object:", rawBaseGeo);
+        console.log("rawBaseGeo.index:", rawBaseGeo.index);
+
+        let baseGeoToUse; // This will be the geometry used for graph and visuals
+
+        if (THREE.BufferGeometryUtils && typeof THREE.BufferGeometryUtils.mergeVertices === 'function') {
+            console.log("Attempting to use THREE.BufferGeometryUtils.mergeVertices()");
+            try {
+                // Create a clone to avoid modifying the original rawBaseGeo if mergeVertices works in-place on some versions
+                const geoToMerge = rawBaseGeo.clone();
+                baseGeoToUse = THREE.BufferGeometryUtils.mergeVertices(geoToMerge, 1e-5);
+                console.log("baseGeo after mergeVertices:", baseGeoToUse);
+                console.log("baseGeo.index after mergeVertices:", baseGeoToUse.index);
+                if (!baseGeoToUse.index) {
+                    console.warn("mergeVertices did not produce an indexed geometry. Falling back.");
+                    baseGeoToUse = rawBaseGeo; // Fallback if mergeVertices didn't help
+                }
+            } catch (e) {
+                console.error("Error using mergeVertices:", e);
+                baseGeoToUse = rawBaseGeo; // Fallback to raw if mergeVertices fails
+            }
         } else {
-            console.warn("EffectComposer or required passes not found. Bloom effect will be disabled.");
-            composer = null; // Ensure composer is null if setup fails
+            console.warn("THREE.BufferGeometryUtils.mergeVertices not found or not a function. Using rawBaseGeo.");
+            baseGeoToUse = rawBaseGeo;
         }
 
-        scene.add(new THREE.AmbientLight(0x404040, 1.2));
-        const pointLight = new THREE.PointLight(0x99ccff, 1, 5);
-        pointLight.position.set(2, 2, 2);
-        scene.add(pointLight);
-
-        // earthRadius is now from higher scope
-        const icoDetail = 3;
-        const baseGeometry = new THREE.IcosahedronGeometry(earthRadius, icoDetail);
-
-        const sphereGeo = new THREE.SphereGeometry(0.0035, 12, 12);
-        const sphereMaterial = new THREE.MeshStandardMaterial({
-            color: 0x00B4D8,
-            emissive: 0x0066ff,
-            roughness: 0.3,
-            metalness: 0.1
-        });
-        const instanceCount = baseGeometry.attributes.position.count;
-        const instancedSpheres = new THREE.InstancedMesh(sphereGeo, sphereMaterial, instanceCount);
-
-        const dummy = new THREE.Object3D();
-        for (let i = 0; i < instanceCount; i++) {
-            dummy.position.fromBufferAttribute(baseGeometry.attributes.position, i);
-            dummy.updateMatrix();
-            instancedSpheres.setMatrixAt(i, dummy.matrix);
+        // Final check on the baseGeo to be used
+        console.log("--- Diagnosing final baseGeo to be used ---");
+        console.log("Final baseGeo object:", baseGeoToUse);
+        console.log("Final baseGeo.index:", baseGeoToUse.index);
+        if (baseGeoToUse.index) {
+            console.log("Final baseGeo.index.array (first 12):", baseGeoToUse.index.array.slice(0, 12));
+        } else {
+            console.log("Final baseGeo.index is still null or undefined.");
         }
+        console.log("--- End Diagnosing final baseGeo ---");
 
-        const edgesGeometry = new THREE.EdgesGeometry(baseGeometry);
-        const linesMaterial = new THREE.LineBasicMaterial({
-            color: 0x005073,
-            transparent: true,
-            opacity: 0.5,
-            polygonOffset: true,
-            polygonOffsetFactor: 1,
-            polygonOffsetUnits: 1
-        });
-        const earthLines = new THREE.LineSegments(edgesGeometry, linesMaterial);
+        adjacency = buildGraph(baseGeoToUse); // ★ Build graph here using the processed geometry
 
-        earthGroup = new THREE.Group(); // Assign to higher-scoped earthGroup
-        earthGroup.add(instancedSpheres);
-        earthGroup.add(earthLines);
+        // IMPORTANT: Visual elements (nodes and edges) should also use this potentially re-indexed baseGeoToUse
+        const nodeGeo = new THREE.SphereGeometry(0.0035, 12, 12);
+        const nodeMat = new THREE.MeshStandardMaterial({ color: 0x00B4D8, emissive: 0x0066ff, roughness: 0.3, metalness: 0.1 });
 
+        // instCnt should be based on the number of unique vertices in baseGeoToUse.
+        // If baseGeoToUse is indexed, its attributes.position.count is the number of unique vertices.
+        // If it's not indexed (e.g. fallback), then attributes.position.count is num_faces * 3.
+        // For safety, if indexed, use attributes.position.count. If not, this count is too high for unique nodes.
+        // However, the original IcosahedronGeometry (detail=3) has a known number of vertices (e.g. 642).
+        // Let's use baseGeoToUse.attributes.position.count, assuming mergeVertices correctly sets this for unique vertices.
+        const instCnt = baseGeoToUse.attributes.position.count;
+
+        const inst = new THREE.InstancedMesh(nodeGeo, nodeMat, instCnt);
+        const d = new THREE.Object3D();
+
+        // Iterate through the *unique* vertex positions defined in baseGeoToUse.attributes.position
+        for (let i = 0; i < instCnt; i++) {
+            // Check if 'i' is a valid index for the position attribute
+            if (i < baseGeoToUse.attributes.position.count) {
+                d.position.fromBufferAttribute(baseGeoToUse.attributes.position, i);
+                d.updateMatrix();
+                if (i < inst.count) { // Ensure we don't write out of bounds for instanced mesh
+                    inst.setMatrixAt(i, d.matrix);
+                }
+            }
+        }
+        inst.instanceMatrix.needsUpdate = true; // Moved out of loop
+
+
+        const edges = new THREE.LineSegments(new THREE.EdgesGeometry(baseGeoToUse), new THREE.LineBasicMaterial({ color: 0x005073, opacity: 0.5, transparent: true }));
+
+        earthGroup = new THREE.Group();
+        earthGroup.add(inst); earthGroup.add(edges);
         earthGroup.rotation.y = Math.PI;
         scene.add(earthGroup);
 
-        window.addEventListener('resize', onWindowResize, false);
+        scene.add(new THREE.AmbientLight(0x404040, 1.2));
+        const pt = new THREE.PointLight(0x99ccff, 1, 5); pt.position.set(2, 2, 2); scene.add(pt);
 
-        // attackColorsConfig is now defined inside ArcSystem or passed if needed.
-        // For this stage, ArcSystem uses its internally defined attackColors.
-        // We will pass the baseGeometry and earthGroup.
-        // The attackColorsConfig that was here is now part of the ArcSystem's constructor logic.
-        const globalAttackColorsConfig = {
+        /* arc system */
+        const attackColors = {
             low: [0x00ff00, 0x33cc33, 0x66ff66],
             medium: [0xffff00, 0xffcc00, 0xffaa00],
             high: [0xff8800, 0xff6600, 0xff4400],
             critical: [0xff0000, 0xcc0000, 0xff00ff, 0xcc00cc]
         };
-        arcSystemInstance = new ArcSystem(earthGroup, baseGeometry, globalAttackColorsConfig);
+        arcSystem = new ArcSystem(earthGroup, baseGeoToUse, attackColors, adjacency); // ★ Use baseGeoToUse
 
-        animateEarth(baseGeometry); // baseGeometry is passed for now, ArcSystem might use it internally
+        window.addEventListener('resize', onResize);
+        animate();
     }
 
-    function onWindowResize() {
-        if (camera && renderer && earthContainer && earthContainer.clientWidth > 0 && earthContainer.clientHeight > 0) {
-            camera.aspect = earthContainer.clientWidth / earthContainer.clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(earthContainer.clientWidth, earthContainer.clientHeight);
-            if (composer) {
-                composer.setSize(earthContainer.clientWidth, earthContainer.clientHeight);
-            }
-            // It's generally good practice to also update bloomPass resolution if it exists and is sensitive
-            // However, composer.setSize often handles this for its passes.
-            // if (bloomPass) {
-            //     bloomPass.resolution.set(earthContainer.clientWidth, earthContainer.clientHeight);
-            // }
-        }
+    function onResize() {
+        if (!camera || !renderer) return;
+        camera.aspect = container.clientWidth / container.clientHeight; camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        if (composer) composer.setSize(container.clientWidth, container.clientHeight);
     }
 
-    // frameCount is now managed by arcSystemInstance.
-    // The currentBaseGeometry parameter might become obsolete for animateEarth if ArcSystem fully encapsulates its use.
-    function animateEarth(currentBaseGeometry) {
-        if (earthGroup && renderer && scene && camera) {
-            requestAnimationFrame(() => animateEarth(currentBaseGeometry));
-            earthGroup.rotation.y += 0.0006;
+    /* ------------------------------------------------------------------
+       🎞️  animation loop
+       ------------------------------------------------------------------ */
 
-            const delta = clock.getDelta();
-
-            if (arcSystemInstance) {
-                arcSystemInstance.update(delta);          // Update existing arcs
-                arcSystemInstance.triggerRandomAttack();  // Let ArcSystem decide if/when to create new attacks
-            }
-
-            // All attack creation logic (frameCount, if(shouldTriggerAttack), loops, etc.)
-            // has been moved into arcSystemInstance.triggerRandomAttack().
-
-            if (composer) {
-                composer.render();
-            } else {
-                renderer.render(scene, camera);
-            }
-        }
+    function animate() {
+        requestAnimationFrame(animate);
+        const dt = clock.getDelta();
+        earthGroup.rotation.y += 0.0006;
+        arcSystem.update(dt);
+        arcSystem.maybeTrigger();
+        composer ? composer.render() : renderer.render(scene, camera);
     }
 
-    // Call Three.js initialization
-    initThreeJSEarth();
+    /* ------------------------------------------------------------------
+       ✨  initialise all subsystems
+       ------------------------------------------------------------------ */
+    init();
 
-    // --- tsparticles Initialization for Abstract Digital Grid & Pulses ---
+    /* ------------------------------------------------------------------
+       � particles background & misc Easter eggs (unchanged)
+       ------------------------------------------------------------------ */
     if (typeof tsParticles !== 'undefined' && document.getElementById('tsparticles')) {
-        tsParticles.load("tsparticles", {
+        tsParticles.load('tsparticles', {
             fpsLimit: 60,
             interactivity: {
-                events: {
-                    onHover: {
-                        enable: true,
-                        mode: "bubble"
-                    },
-                    onClick: {
-                        enable: true,
-                        mode: "push"
-                    },
-                    resize: true
-                },
-                modes: {
-                    bubble: {
-                        distance: 150,
-                        size: 10,
-                        duration: 0.6,
-                        opacity: 0.8,
-                        color: "#38F321"
-                    },
-                    push: {
-                        quantity: 3
-                    },
-                    repulse: {
-                        distance: 100,
-                        duration: 0.4
-                    }
-                }
+                events: { onHover: { enable: true, mode: 'bubble' }, onClick: { enable: true, mode: 'push' }, resize: true },
+                modes: { bubble: { distance: 150, size: 10, duration: 0.6, opacity: 0.8, color: '#38F321' }, push: { quantity: 3 } }
             },
             particles: {
-                number: {
-                    value: 60,
-                    density: {
-                        enable: true,
-                        value_area: 800
-                    }
-                },
-                color: {
-                    value: ["#00B4D8", "#5E60CE"]
-                },
-                shape: {
-                    type: "triangle",
-                },
-                opacity: {
-                    value: { min: 0.2, max: 0.7 },
-                    random: true,
-                    anim: {
-                        enable: true,
-                        speed: 0.8,
-                        opacity_min: 0.1,
-                        sync: false
-                    }
-                },
-                size: {
-                    value: { min: 1, max: 4 },
-                    random: true,
-                    anim: {
-                        enable: true,
-                        speed: 2,
-                        size_min: 0.5,
-                        sync: false
-                    }
-                },
-                links: {
-                    enable: true,
-                    distance: 130,
-                    color: "rgba(0, 180, 216, 0.3)",
-                    opacity: 0.3,
-                    width: 1
-                },
-                move: {
-                    enable: true,
-                    speed: 1.2,
-                    direction: "none",
-                    random: true,
-                    straight: false,
-                    out_mode: "out",
-                    attract: {
-                        enable: true,
-                        rotateX: 600,
-                        rotateY: 1200,
-                        strength: 0.1
-                    }
-                }
+                number: { value: 60, density: { enable: true, value_area: 800 } },
+                color: { value: ['#00B4D8', '#5E60CE'] }, shape: { type: 'triangle' },
+                opacity: { value: { min: 0.2, max: 0.7 }, random: true, anim: { enable: true, speed: 0.8, opacity_min: 0.1 } },
+                size: { value: { min: 1, max: 4 }, random: true, anim: { enable: true, speed: 2, size_min: 0.5 } },
+                links: { enable: true, distance: 130, color: 'rgba(0, 180, 216, 0.3)', opacity: 0.3, width: 1 },
+                move: { enable: true, speed: 1.2, random: true, out_mode: 'out' }
             },
             detectRetina: true
         });
     }
 
-    // --- Console Easter Egg ---
-    console.log("%c白帽駭客 — Stay ethical!", "color:#38f321; font-family: Orbitron, sans-serif; font-size: 1.2em;");
-    console.log("%cWelcome to the console. If you're inspecting this, you might be one of us. Keep exploring, keep learning.", "color:#00B4D8;");
+    console.log('%c白帽駭客 — Stay ethical!', 'color:#38f321;font-family:Orbitron,sans-serif;font-size:1.2em;');
+    console.log('%cWelcome to the console. If you\'re inspecting this, you might be one of us. Keep exploring, keep learning.', 'color:#00B4D8;');
 
-    // --- Dynamic Year in Footer ---
     const yearSpan = document.getElementById('current-year');
-    if (yearSpan) {
-        yearSpan.textContent = new Date().getFullYear();
-    }
+    if (yearSpan) yearSpan.textContent = new Date().getFullYear();
 
-    // --- Intersection Observer for Reveal Animations ---
-    const revealElements = document.querySelectorAll('.content-panel, .project-card, .skill-card');
-    const revealObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-                // observer.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.1 });
-
-    revealElements.forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(30px)';
-        el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
-        revealObserver.observe(el);
-    });
+    /* reveal animations */
+    const revealEls = document.querySelectorAll('.content-panel, .project-card, .skill-card');
+    const io = new IntersectionObserver((entries) => { entries.forEach(e => { if (e.isIntersecting) { e.target.style.opacity = '1'; e.target.style.transform = 'translateY(0)'; } }); }, { threshold: 0.1 });
+    revealEls.forEach(el => { el.style.opacity = '0'; el.style.transform = 'translateY(30px)'; el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out'; io.observe(el); });
 
 });
+
+/* ========= /main.js ========= */
