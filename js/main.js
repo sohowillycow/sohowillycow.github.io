@@ -77,31 +77,63 @@ document.addEventListener('DOMContentLoaded', () => {
     // Simple MinPriorityQueue for Dijkstra, as suggested by change.md
     class MinPriorityQueue {
         constructor(options = {}) {
-            this._priority = options.priority || (x => x); // 取「數值」的函式 (change02.md L49)
-            this._elements = [];
+            this._priority = options.priority || (x => x);
+            this._heap = [];
         }
-
         enqueue(element) {
-            this._elements.push(element);
-            // 使用 _priority 進行排序 (change02.md L51)
-            this._elements.sort((a, b) => this._priority(a) - this._priority(b));
+            this._heap.push(element);
+            this._bubbleUp(this._heap.length - 1);
         }
-
         dequeue() {
-            if (this.isEmpty()) {
-                return undefined;
+            if (this.isEmpty()) return undefined;
+            const min = this._heap[0];
+            const end = this._heap.pop();
+            if (this._heap.length > 0) {
+                this._heap[0] = end;
+                this._bubbleDown(0);
             }
-            return this._elements.shift();
+            return min;
         }
-
+        _bubbleUp(idx) {
+            const element = this._heap[idx];
+            while (idx > 0) {
+                const parentIdx = Math.floor((idx - 1) / 2);
+                const parent = this._heap[parentIdx];
+                if (this._priority(element) >= this._priority(parent)) break;
+                this._heap[parentIdx] = element;
+                this._heap[idx] = parent;
+                idx = parentIdx;
+            }
+        }
+        _bubbleDown(idx) {
+            const length = this._heap.length;
+            const element = this._heap[idx];
+            while (true) {
+                let leftIdx = 2 * idx + 1;
+                let rightIdx = 2 * idx + 2;
+                let swap = null;
+                if (leftIdx < length) {
+                    const left = this._heap[leftIdx];
+                    if (this._priority(left) < this._priority(element)) swap = leftIdx;
+                }
+                if (rightIdx < length) {
+                    const right = this._heap[rightIdx];
+                    if (this._priority(right) < (swap === null ? this._priority(element) : this._priority(this._heap[swap]))) swap = rightIdx;
+                }
+                if (swap === null) break;
+                this._heap[idx] = this._heap[swap];
+                this._heap[swap] = element;
+                idx = swap;
+            }
+        }
         isEmpty() {
-            return this._elements.length === 0;
+            return this._heap.length === 0;
         }
-
         get size() {
-            return this._elements.length;
+            return this._heap.length;
         }
     }
+
 
     /* ----------------  Graph Building Function ---------------- */
     // As per change.md
